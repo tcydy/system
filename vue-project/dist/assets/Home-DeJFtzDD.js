@@ -1,0 +1,1 @@
+import{_ as t,c as n,e as s,w as a,f as c,o as r,d}from"./index-DuvPzMQt.js";const l={},_={style:{padding:"10px"}};function f(p,e){const o=c("el-card");return r(),n("div",_,[s(o,null,{default:a(()=>[...e[0]||(e[0]=[d("h2",null,"您好，欢迎使用本系统！",-1)])]),_:1})])}const m=t(l,[["render",f]]);export{m as default};

@@ -1,0 +1,13 @@
+package com.example.fusionsystem.exception;
+
+import lombok.Getter;
+
+/*自定义异常*/
+@Getter
+public class ServiceException extends RuntimeException {
+    private final String code;
+    public ServiceException(String code, String message) {
+        super(message);
+        this.code=code;
+    }
+}
