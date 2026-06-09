@@ -32,6 +32,7 @@ const loadGoods = ()=>{
     })
 }
 loadGoods()
+request.post('/goods/addView/' + id.value)
 
 const changeImg = (item) =>{
     img.value=item
@@ -43,14 +44,12 @@ const collect = () =>{
     }
 
     request.post('/collect', data).then(res => {
-    if(res.code==='200'){
-    ElMessage.success('收藏成功')
-    loadGoods()
-    }else{
-    ElMessage.error(res.msg)
-    loadGoods()
-    }
-
+      if (res.code === '200') {
+        ElMessage.success('收藏成功')
+        goods.value.isCollected = !goods.value.isCollected
+      } else {
+        ElMessage.error(res.msg)
+      }
     })
 }
 

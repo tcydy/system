@@ -47,6 +47,15 @@ public class GoodsController {
         return Result.success(goodsService.removeByIds(ids));
     }
 
+    //增加浏览量
+    @PostMapping("/addView/{id}")
+    public Result addView(@PathVariable Integer id) {
+        Goods goods = goodsService.getById(id);
+        goods.setNum(goods.getNum() + 1);
+        goodsService.updateById(goods);
+        return Result.success();
+    }
+
     @GetMapping("/hot")
     public Result findALLHot() {
         LambdaQueryWrapper<Goods> queryWrapper = new LambdaQueryWrapper<>();
@@ -120,3 +129,5 @@ public class GoodsController {
         return Result.success(goodsService.page(new Page<>(pageNum, pageSize), queryWrapper));
     }
 }
+
+
