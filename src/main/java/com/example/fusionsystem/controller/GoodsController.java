@@ -1,5 +1,6 @@
 package com.example.fusionsystem.controller;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -13,6 +14,8 @@ import com.example.fusionsystem.utils.TokenUtils;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
+
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -114,6 +117,37 @@ public class GoodsController {
             queryWrapper.like(Goods::getName,keyword);
         }
         return Result.success(goodsService.page(new Page<>(pageNum,pageSize),queryWrapper));
+    }
+
+    @GetMapping("/collect/page")
+    public Result findCollectPage(@RequestParam Integer pageNum,
+                           @RequestParam Integer pageSize,
+                           @RequestParam(defaultValue = "") String keyword) {
+
+        LambdaQueryWrapper<Collect> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Collect::getUserId,TokenUtils.getCurrentUser().getId());
+        List<Collect> collectlist = collectService.list(wrapper);
+
+        if(CollectionUtil.isEmpty(collectlist)){
+            return Result.success(collectService.page(new Page<>(pageNum, pageSize), wrapper));
+        }
+
+        List<Integer>ids=new ArrayList<>();
+
+        for(Collect collect:collectlist){
+            ids.add(collect.getItemId());
+        }
+
+        LambdaQueryWrapper<Goods> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.orderByDesc(Goods::getId);
+
+        if (StrUtil.isNotBlank(keyword)) {
+            queryWrapper.like(Goods::getName, keyword);
+        }
+
+        queryWrapper.in(Goods::getId,ids);
+
+        return Result.success(goodsService.page(new Page<>(pageNum, pageSize), queryWrapper));
     }
 
     @GetMapping("/page")
