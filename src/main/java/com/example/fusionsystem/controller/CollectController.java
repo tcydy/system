@@ -38,7 +38,15 @@ public class CollectController {
     }
 
     @DeleteMapping("/{id}")
-    public Result delete(@PathVariable Integer id){return Result.success(collectService.removeById(id));}
+    public Result delete(@PathVariable Integer id){
+
+        LambdaQueryWrapper<Collect> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Collect::getUserId, TokenUtils.getCurrentUser().getId());
+        wrapper.eq(Collect::getItemId, id);
+        collectService.remove(wrapper);
+
+        return Result.success(collectService.removeById(id));
+    }
 
     @PostMapping("/del/batch")
     public Result deleteBatch(@RequestBody List<Integer> ids){return Result.success(collectService.removeByIds(ids));}

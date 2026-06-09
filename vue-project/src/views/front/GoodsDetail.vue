@@ -56,7 +56,7 @@ const collect = () =>{
 </script>
 
 <template>
-  
+
   <div style="width:60%;margin: 0 auto;min-height: 300px;padding:30px;background-color: #f4f4f4;">
     <el-card style="border-radius: 10px;">
         <div style="display: flex;gap:10px">
@@ -107,7 +107,7 @@ const collect = () =>{
                 </div>
 
             </div>
-            
+
             <div>
                 <span style="color:grey">{{ goods.num }}浏览</span>
             </div>
