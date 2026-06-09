@@ -9,5 +9,4 @@ public interface Constants {
     String CODE_500 = "500"; // 系统错误
     String CODE_605 = "605"; // 业务异常
 
-    
 }

@@ -3,6 +3,8 @@ import {useRoute,useRouter} from "vue-router";
 import request from "@/utils/request.js"
 import {ref} from 'vue'
 import {Star,StarFilled} from '@element-plus/icons-vue';
+import { ElMessage } from 'element-plus'
+import 'element-plus/dist/index.css'
 
 const route = useRoute()
 const router = useRouter()
@@ -33,6 +35,23 @@ loadGoods()
 
 const changeImg = (item) =>{
     img.value=item
+}
+
+const collect = () =>{
+    const data={
+        itemId:id.value
+    }
+
+    request.post('/collect', data).then(res => {
+    if(res.code==='200'){
+    ElMessage.success('收藏成功')
+    loadGoods()
+    }else{
+    ElMessage.error(res.msg)
+    loadGoods()
+    }
+
+    })
 }
 
 </script>
@@ -120,9 +139,9 @@ const changeImg = (item) =>{
 
             <div style="display:flex;gap: 10px;">
 
-                <button style="height: 50px;width: 150px;text-align: center;background-color: orange;color: black;">聊一聊</button>
-                <button style="height: 50px;width: 200px;text-align: center;background-color: black;color: white;">立即购买</button>
-                <button style="height: 50px;min-width: 100px;text-align: center;">
+                <button style="height: 50px;width: 150px;text-align: center;background-color: orange;color: black;border: none">聊一聊</button>
+                <button style="height: 50px;width: 200px;text-align: center;background-color: black;color: white;border: none">立即购买</button>
+                <button style="height: 50px;min-width: 100px;text-align: center;border: none" @click="collect">
                     <el-icon v-if="goods.isCollected"><StarFilled/></el-icon>
                     <el-icon v-else><Star/></el-icon>
                     {{ goods.isCollected ?'已收藏':'收藏' }}
