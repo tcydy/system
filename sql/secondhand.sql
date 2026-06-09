@@ -157,3 +157,7 @@ INSERT INTO `type` VALUES (9, '汽车/电动车', '轻松出行全面购', 'http
 INSERT INTO `type` VALUES (10, '五金/设备/', '品质工具安心选', 'http://127.0.0.1:8080/files/aaaaj20260606214253.jpg', 'http://127.0.0.1:8080/files/65318436b3cd4bd2a469735ae7b3f122.png', 1);
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+
+
+
