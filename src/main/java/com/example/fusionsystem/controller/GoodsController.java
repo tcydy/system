@@ -5,7 +5,9 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.fusionsystem.common.Result;
+import com.example.fusionsystem.enity.Collect;
 import com.example.fusionsystem.enity.Goods;
+import com.example.fusionsystem.service.ICollectService;
 import com.example.fusionsystem.service.IGoodsService;
 import com.example.fusionsystem.utils.TokenUtils;
 import jakarta.annotation.Resource;
@@ -18,6 +20,8 @@ import java.util.List;
 public class GoodsController {
     @Resource
     private IGoodsService goodsService;
+    @Resource
+    private ICollectService collectService;
 
     @PostMapping
     public Result save(@RequestBody Goods goods) {
@@ -64,7 +68,16 @@ public class GoodsController {
 
     @GetMapping("/{id}")
     public Result findOne(@PathVariable Integer id) {
-        return Result.success(goodsService.getById(id));
+
+        Goods goods=goodsService.getById(id);
+
+        LambdaQueryWrapper<Collect> wrapper=new LambdaQueryWrapper<>();
+        wrapper.eq(Collect::getItemId,id);
+        wrapper.eq(Collect::getUserId,TokenUtils.getCurrentUser().getId());
+        Collect one=collectService.getOne(wrapper);
+        goods.setIsCollected(one!=null);
+
+        return Result.success(goods);
     }
 
 
