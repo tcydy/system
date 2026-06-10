@@ -22,9 +22,16 @@ const addressId = ref(0)
 
 const address = ref([])
 const loadAddress = ()=>{
-  request.get('/address').then(res=>{
-    address.value=res.data
-     addressId.value=address.value[0].id
+  request.get('/address/page', {
+    params: {
+      pageNum: 1,
+      pageSize: 999
+    }
+  }).then(res=>{
+    address.value = res.data.records || []
+    if (address.value.length > 0) {
+      addressId.value = address.value[0].id
+    }
   })
 }
 loadAddress()
@@ -37,7 +44,7 @@ const changeAddress = (id)=>{
 
 <template>
 <div style="width: 100%;height: 100vh;background-color: #f1f1f1">
-  <div style="display: flex;gap: 20px;width: 70%;margin: 0 auto;padding: 20px">
+  <div style="display: flex;gap: 20px;width: 75%;margin: 0 auto;padding: 20px">
     <div style="flex: 1">
       <!-- 地址卡片 -->
       <el-card style="border-radius: 10px">
@@ -59,17 +66,16 @@ const changeAddress = (id)=>{
 
 
             <div>
-                <div>
-                    <span>{{item.address}}</span>
-                            </div>
-                <div>
+                <div style="margin-bottom: 6px;">
+                    <span style="font-weight: bold; font-size: 15px;">{{item.address}}</span>
+                </div>
+                <div style="font-size:12px;margin-bottom: 6px;">
                     <span>{{item.info}}</span>
-                            </div>
-                <div style="display: flex;gap: 5px">
+                </div>
+                <div style="font-size:12px;color:#999;display: flex;gap: 5px">
                     <span>{{item.name}}</span>
                     <span>{{item.phone}}</span>
-
-                            </div>
+                </div>
             </div>
 
 
