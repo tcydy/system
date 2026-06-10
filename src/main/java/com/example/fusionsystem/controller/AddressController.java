@@ -23,9 +23,14 @@ public class AddressController {
 
     @PostMapping
     public Result save(@RequestBody Address address) {
-        if(address.getId()==null){
-            address.setUserId(TokenUtils.getCurrentUser().getId());
+        Account currentUser = TokenUtils.getCurrentUser();
+
+        // 如果是普通用户，强制使用自己的 userId
+        if(!StrUtil.equals(currentUser.getRole(), "ROLE_ADMIN")) {
+            address.setUserId(currentUser.getId());
         }
+        // 如果是管理员，使用前端传的 userId（已经在前端选择了）
+
         return Result.success(addressService.saveOrUpdate(address));
     }
 

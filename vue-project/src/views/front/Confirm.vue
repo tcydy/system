@@ -2,6 +2,8 @@
 import { useRoute, useRouter } from "vue-router";
 import { ref } from "vue";
 import request from "@/utils/request.js";
+import {Location} from '@element-plus/icons-vue';
+
 
 const route = useRoute()
 const router = useRouter()
@@ -15,6 +17,22 @@ const loadGoods = ()=>{
   })
 }
 loadGoods()
+
+const addressId = ref(0)
+
+const address = ref([])
+const loadAddress = ()=>{
+  request.get('/address').then(res=>{
+    address.value=res.data
+     addressId.value=address.value[0].id
+  })
+}
+loadAddress()
+
+const changeAddress = (id)=>{
+  addressId.value=id
+}
+
 </script>
 
 <template>
@@ -25,12 +43,41 @@ loadGoods()
       <el-card style="border-radius: 10px">
         <div style="display:flex;justify-content: space-between;align-items: center">
           <div>
-            <h3>订单信息</h3>
+            <h3>收货地址</h3>
           </div>
           <div>
             <span style="font-size: 14px;color: grey" @click="router.push('/front/address')">管理地址</span>
           </div>
         </div>
+
+        <div style="margin-top: 10px;display: grid;grid-template-columns:repeat(3,1fr);gap:10px">
+
+          <div class="address-card" :class="{'active' :item.id===addressId}" v-for="item in address" :key="item.id"@click="changeAddress(item.id)">
+            <div style="font-size: 24px">
+                <el-icon><Location/></el-icon>
+            </div>
+
+
+            <div>
+                <div>
+                    <span>{{item.address}}</span>
+                            </div>
+                <div>
+                    <span>{{item.info}}</span>
+                            </div>
+                <div style="display: flex;gap: 5px">
+                    <span>{{item.name}}</span>
+                    <span>{{item.phone}}</span>
+
+                            </div>
+            </div>
+
+
+
+          </div>
+
+        </div>
+
       </el-card>
 
       <!-- 商品信息卡片 -->
@@ -88,6 +135,21 @@ loadGoods()
 </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
+
+.address-card{
+    height:100px;
+    width: 100%;
+    border: 1px solid #e6e6e6;
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    gap: 10px;
+
+    &.active{
+        border: 1px solid orangered;
+        background-color: rgba(255, 69, 0, 0.1);
+    }
+}
 
 </style>
