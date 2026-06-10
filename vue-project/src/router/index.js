@@ -122,7 +122,15 @@ const routes = [
         meta: {
           title: '商品详情'
         }
-      }
+      },
+      {
+        path: 'confirm',
+        name: 'FrontConfirm',
+        component: () => import('../views/front/Confirm.vue'),
+        meta: {
+          title: '下单确认'
+        }
+      },
     ]
   },
   //下面都是后台路由

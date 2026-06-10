@@ -38,19 +38,36 @@ const changeImg = (item) =>{
     img.value=item
 }
 
-const collect = () =>{
-    const data={
-        itemId:id.value
+const collect = () => {
+    if (goods.value.isCollected) {
+        request.delete('/collect/' + id.value).then(res => {
+            if (res.code === '200') {
+                goods.value.isCollected = false
+                ElMessage.success('取消收藏成功')
+            } else {
+                ElMessage.error(res.msg)
+            }
+        })
+    } else {
+        request.post('/collect', { itemId: id.value }).then(res => {
+            if (res.code === '200') {
+                goods.value.isCollected = true
+                ElMessage.success('收藏成功')
+            } else {
+                ElMessage.error(res.msg)
+            }
+        })
     }
+}
 
-    request.post('/collect', data).then(res => {
-      if (res.code === '200') {
-        ElMessage.success('收藏成功')
-        goods.value.isCollected = !goods.value.isCollected
-      } else {
-        ElMessage.error(res.msg)
-      }
-    })
+// 跳转到下单确认页
+const toConfirm = () => {
+  router.push({
+    path: '/front/confirm',
+    query: {
+      id: id.value  // 把商品id带过去
+    }
+  })
 }
 
 </script>
@@ -139,8 +156,7 @@ const collect = () =>{
             <div style="display:flex;gap: 10px;">
 
                 <button style="height: 50px;width: 150px;text-align: center;background-color: orange;color: black;border: none">聊一聊</button>
-                <button style="height: 50px;width: 200px;text-align: center;background-color: black;color: white;border: none">立即购买</button>
-                <button style="height: 50px;min-width: 100px;text-align: center;border: none" @click="collect">
+                <button @click="toConfirm" style="height: 50px;width: 200px;text-align: center;background-color: black;color: white;border: none">立即购买</button>                <button style="height: 50px;min-width: 100px;text-align: center;border: none" @click="collect">
                     <el-icon v-if="goods.isCollected"><StarFilled/></el-icon>
                     <el-icon v-else><Star/></el-icon>
                     {{ goods.isCollected ?'已收藏':'收藏' }}

@@ -2,6 +2,8 @@
 import { reactive, ref } from "vue";
 import request from "@/utils/request.js";
 import { Star, StarFilled } from '@element-plus/icons-vue';
+import { ElMessage } from 'element-plus'
+
 
 const searchForm = reactive({ keyword: '' });
 const tableData = ref([]);
@@ -38,6 +40,7 @@ const handleCurrentChange = (current) => {
 const cancelCollect = (id) => {
   request.delete("/collect/" + id).then(res => {
     load();
+    ElMessage.success('取消收藏成功')
   });
 };
 
@@ -72,10 +75,9 @@ const cancelCollect = (id) => {
             </div>
 
             <div class="action-bar">
-              <!-- 这里传的是 item.id（收藏表主键ID） -->
               <button class="btn" @click="cancelCollect(item.id)">
                 <el-icon><StarFilled /></el-icon>
-                已收藏
+                取消收藏
               </button>
               <button class="btn" v-if="item.status !== '已售出'" @click="goChat">
                 我想要
@@ -123,7 +125,7 @@ const cancelCollect = (id) => {
 .card-hover-up { transition: all 0.3s ease; position: relative; }
 .card-hover-up:hover { transform: translateY(-6px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
 
-/* 按钮条：hover卡片就上来 */
+/* 按钮条 */
 .action-bar {
   position: absolute; left:0;right:0;bottom:0; height:46px;
   background: rgba(0,0,0,0.45);
