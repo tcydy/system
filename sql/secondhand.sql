@@ -1,21 +1,44 @@
 /*
  Navicat Premium Dump SQL
 
- Source Server         : localhost_3306
+ Source Server         : 1
  Source Server Type    : MySQL
- Source Server Version : 80409 (8.4.9)
+ Source Server Version : 80046 (8.0.46)
  Source Host           : localhost:3306
  Source Schema         : secondhand
 
  Target Server Type    : MySQL
- Target Server Version : 80409 (8.4.9)
+ Target Server Version : 80046 (8.0.46)
  File Encoding         : 65001
 
- Date: 08/06/2026 23:07:09
+ Date: 10/06/2026 23:28:57
 */
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for address
+-- ----------------------------
+DROP TABLE IF EXISTS `address`;
+CREATE TABLE `address`  (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '收货人姓名',
+  `address` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '地址',
+  `info` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '具体地址',
+  `phone` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '联系电话',
+  `user_id` int NULL DEFAULT NULL COMMENT '用户id',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `id`(`id` ASC, `address` ASC, `info` ASC, `phone` ASC, `user_id` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of address
+-- ----------------------------
+INSERT INTO `address` VALUES (6, '111', '河北省/秦皇岛市/北戴河区', '222', '111', 18);
+INSERT INTO `address` VALUES (10, '444', '山西省/长治市/上党区', '10', '44', 19);
+INSERT INTO `address` VALUES (13, '666', '山西省/长治市/潞州区', '666', '66', 18);
+INSERT INTO `address` VALUES (14, '444', '山西省/长治市/上党区', '444', '445', 19);
 
 -- ----------------------------
 -- Table structure for banner
@@ -34,6 +57,24 @@ CREATE TABLE `banner`  (
 INSERT INTO `banner` VALUES (1, '我们为您的每一笔交易保驾护航！', 'http://127.0.0.1:8080/files/07bbe4b58a684fdf9fa14cb313d89bb9.jpg');
 INSERT INTO `banner` VALUES (2, '每一件二手物品，都是独一无二的故事！', 'http://127.0.0.1:8080/files/77f0c22b43eb4f3790dbc76215759a88.jpg');
 INSERT INTO `banner` VALUES (3, '让闲置物品重获新生，环保又省钱！', 'http://127.0.0.1:8080/files/18ecf61aae4147958a6bc264da45aaf1.jpg');
+
+-- ----------------------------
+-- Table structure for collect
+-- ----------------------------
+DROP TABLE IF EXISTS `collect`;
+CREATE TABLE `collect`  (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `user_id` int NULL DEFAULT NULL COMMENT '用户id',
+  `item_id` int NULL DEFAULT NULL COMMENT '收藏id',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `user_id`(`user_id` ASC, `item_id` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 105 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of collect
+-- ----------------------------
+INSERT INTO `collect` VALUES (103, 18, 101);
+INSERT INTO `collect` VALUES (104, 18, 102);
 
 -- ----------------------------
 -- Table structure for goods
@@ -61,10 +102,10 @@ CREATE TABLE `goods`  (
 -- ----------------------------
 -- Records of goods
 -- ----------------------------
-INSERT INTO `goods` VALUES (101, 'NUTO酒红色短袖风衣外套', 'http://127.0.0.1:8080/files/goods-nuto-red-coat.jpg', 'http://127.0.0.1:8080/files/goods-nuto-red-coat.jpg', 2, 128.00, 269.00, '酒红色短袖风衣外套，版型挺括，适合春秋搭配，图片实拍，成色较新。', '广东广州', '包邮', 9, 18, '上架', '九成新', '2026-06-07');
-INSERT INTO `goods` VALUES (102, '富士 instax mini 拍立得相纸', 'http://127.0.0.1:8080/files/goods-instax-film.jpg', 'http://127.0.0.1:8080/files/goods-instax-film.jpg', 1, 49.90, 69.00, '富士 instax mini 拍立得相纸，20张装，适合 mini 系列相机使用。', '浙江杭州', '不包邮', 9, 32, '上架', '全新', '2026-06-07');
-INSERT INTO `goods` VALUES (103, '白色字母短袖 T 恤', 'http://127.0.0.1:8080/files/goods-white-tshirt.jpg', 'http://127.0.0.1:8080/files/goods-white-tshirt.jpg', 2, 39.90, 99.00, '白色宽松短袖 T 恤，胸前字母印花，日常百搭，轻微使用痕迹。', '河北省/秦皇岛市/北戴河区', '包邮', 9, 25, '上架', '八成新', '2026-06-07');
-INSERT INTO `goods` VALUES (104, '真维斯牛仔短裤', 'http://127.0.0.1:8080/files/goods-denim-shorts.jpg', 'http://127.0.0.1:8080/files/goods-denim-shorts.jpg', 2, 59.90, 159.00, '真维斯牛仔短裤，破洞流苏设计，适合夏季穿搭，成色良好。', '上海', '包邮', 9, 41, '上架', '九成新', '2026-06-07');
+INSERT INTO `goods` VALUES (101, 'NUTO酒红色短袖风衣外套', 'http://127.0.0.1:8080/files/goods-nuto-red-coat.jpg', 'http://127.0.0.1:8080/files/goods-nuto-red-coat.jpg', 2, 128.00, 269.00, '酒红色短袖风衣外套，版型挺括，适合春秋搭配，图片实拍，成色较新。', '广东广州', '包邮', 9, 25, '上架', '九成新', '2026-06-07');
+INSERT INTO `goods` VALUES (102, '富士 instax mini 拍立得相纸', 'http://127.0.0.1:8080/files/goods-instax-film.jpg', 'http://127.0.0.1:8080/files/goods-instax-film.jpg', 1, 49.90, 69.00, '富士 instax mini 拍立得相纸，20张装，适合 mini 系列相机使用。', '浙江杭州', '不包邮', 9, 55, '上架', '全新', '2026-06-07');
+INSERT INTO `goods` VALUES (103, '白色字母短袖 T 恤', 'http://127.0.0.1:8080/files/goods-white-tshirt.jpg', 'http://127.0.0.1:8080/files/goods-white-tshirt.jpg', 2, 39.90, 99.00, '白色宽松短袖 T 恤，胸前字母印花，日常百搭，轻微使用痕迹。', '河北省/秦皇岛市/北戴河区', '包邮', 9, 31, '上架', '八成新', '2026-06-07');
+INSERT INTO `goods` VALUES (104, '真维斯牛仔短裤', 'http://127.0.0.1:8080/files/goods-denim-shorts.jpg', 'http://127.0.0.1:8080/files/goods-denim-shorts.jpg', 2, 59.90, 159.00, '真维斯牛仔短裤，破洞流苏设计，适合夏季穿搭，成色良好。', '上海', '包邮', 9, 71, '上架', '九成新', '2026-06-07');
 INSERT INTO `goods` VALUES (106, '测试', 'http://127.0.0.1:8080/files/c15c50d5933e417ca3b016712924e4fc.jpg', 'http://127.0.0.1:8080/files/411026cbd4bd459dbee2e62771bb5b33.jpg', 1, 12.00, 15.00, '<p>123456</p>', '北京市/市辖区/东城区', '包邮', 17, 0, '上架', '全新', '2026-06-08');
 
 -- ----------------------------
@@ -116,7 +157,7 @@ CREATE TABLE `sys_user`  (
   `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `avatar_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = MyISAM AUTO_INCREMENT = 18 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = MyISAM AUTO_INCREMENT = 20 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_user
@@ -127,6 +168,8 @@ INSERT INTO `sys_user` VALUES (14, 'wangwu', '王五', '$2a$10$m/RYPeE7fTn4ZcgZ6
 INSERT INTO `sys_user` VALUES (15, 'zhaoliu', '赵六', '$2a$10$m/RYPeE7fTn4ZcgZ6RmwxO9g01HIIIqfc4GVs8EESyTlTXSiwe6gW', 'http://127.0.0.1:8080/files/77f0c22b43eb4f3790dbc76215759a88.jpg');
 INSERT INTO `sys_user` VALUES (16, 'xiaomei', '小美', '$2a$10$m/RYPeE7fTn4ZcgZ6RmwxO9g01HIIIqfc4GVs8EESyTlTXSiwe6gW', 'http://127.0.0.1:8080/files/18ecf61aae4147958a6bc264da45aaf1.jpg');
 INSERT INTO `sys_user` VALUES (17, 'xiaoming', NULL, '$2a$10$YY5bziypqvptO.aOWlyFyOQZSXZLX/GzH.FJzd24pRcEkhp6sjCUG', NULL);
+INSERT INTO `sys_user` VALUES (18, '222', NULL, '$2a$10$CIwKk6PneQD3I75G4ls/PuHsnW.LBcEy534YeA45IZXCZ58ykVJzu', NULL);
+INSERT INTO `sys_user` VALUES (19, '333', NULL, '$2a$10$QhxAIqQbPuRGbK7OV7UyteZZXGOma5Dvl7nq6.sT5oy20k4ECI9Pu', NULL);
 
 -- ----------------------------
 -- Table structure for type
@@ -157,7 +200,3 @@ INSERT INTO `type` VALUES (9, '汽车/电动车', '轻松出行全面购', 'http
 INSERT INTO `type` VALUES (10, '五金/设备/', '品质工具安心选', 'http://127.0.0.1:8080/files/aaaaj20260606214253.jpg', 'http://127.0.0.1:8080/files/65318436b3cd4bd2a469735ae7b3f122.png', 1);
 
 SET FOREIGN_KEY_CHECKS = 1;
-
-
-
-
