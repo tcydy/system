@@ -142,6 +142,11 @@ const handleUpdateAccount=(updatedAccount)=>
           <template #title>闲置物品管理</template>
         </el-menu-item>
 
+        <el-menu-item index="/back/address">
+                  <el-icon><House/></el-icon>
+                  <template #title>收货地址管理</template>
+                </el-menu-item>
+
           <el-sub-menu index="" v-if="account.role==='ROLE_ADMIN'">
             <template #title>
               <el-icon><UserFilled/></el-icon>

@@ -131,6 +131,14 @@ const routes = [
           title: '下单确认'
         }
       },
+      {
+        path: 'address',
+        name: 'FrontAddress',
+        component: () => import('../views/front/Address.vue'),
+        meta: {
+          title: '收货地址'
+        }
+      },
     ]
   },
   //下面都是后台路由
@@ -211,7 +219,15 @@ const routes = [
         meta: {
           title: '闲置物品管理'
         }
-      }
+      },
+      {
+        path: 'address',
+        name: 'BackAddress',
+        component: () => import('../views/back/Address.vue'),
+        meta: {
+          title: '收货地址管理'
+        }
+      },
 
     ]
   }

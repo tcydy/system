@@ -6,6 +6,7 @@ D:\github\system\src\main\java\com\example\fusionsystem\config\interceptor\AuthA
 D:\github\system\src\main\java\com\example\fusionsystem\config\interceptor\JwtInterceptor.java
 D:\github\system\src\main\java\com\example\fusionsystem\config\InterceptorConfig.java
 D:\github\system\src\main\java\com\example\fusionsystem\config\MyBatisPlusConfig.java
+D:\github\system\src\main\java\com\example\fusionsystem\controller\AddressController.java
 D:\github\system\src\main\java\com\example\fusionsystem\controller\AdminController.java
 D:\github\system\src\main\java\com\example\fusionsystem\controller\BannerController.java
 D:\github\system\src\main\java\com\example\fusionsystem\controller\CollectController.java
@@ -15,6 +16,7 @@ D:\github\system\src\main\java\com\example\fusionsystem\controller\TypeControlle
 D:\github\system\src\main\java\com\example\fusionsystem\controller\UserController.java
 D:\github\system\src\main\java\com\example\fusionsystem\controller\WebController.java
 D:\github\system\src\main\java\com\example\fusionsystem\enity\Account.java
+D:\github\system\src\main\java\com\example\fusionsystem\enity\Address.java
 D:\github\system\src\main\java\com\example\fusionsystem\enity\Admin.java
 D:\github\system\src\main\java\com\example\fusionsystem\enity\Banner.java
 D:\github\system\src\main\java\com\example\fusionsystem\enity\Collect.java
@@ -24,6 +26,7 @@ D:\github\system\src\main\java\com\example\fusionsystem\enity\Type.java
 D:\github\system\src\main\java\com\example\fusionsystem\enity\User.java
 D:\github\system\src\main\java\com\example\fusionsystem\exception\GlobalExceptionHander.java
 D:\github\system\src\main\java\com\example\fusionsystem\exception\ServiceException.java
+D:\github\system\src\main\java\com\example\fusionsystem\Mapper\AddressMapper.java
 D:\github\system\src\main\java\com\example\fusionsystem\Mapper\AdminMapper.java
 D:\github\system\src\main\java\com\example\fusionsystem\Mapper\BannerMapper.java
 D:\github\system\src\main\java\com\example\fusionsystem\Mapper\CollectMapper.java
@@ -31,10 +34,12 @@ D:\github\system\src\main\java\com\example\fusionsystem\Mapper\GoodsMapper.java
 D:\github\system\src\main\java\com\example\fusionsystem\Mapper\NoticeMapper.java
 D:\github\system\src\main\java\com\example\fusionsystem\Mapper\TypeMapper.java
 D:\github\system\src\main\java\com\example\fusionsystem\Mapper\UserMapper.java
+D:\github\system\src\main\java\com\example\fusionsystem\service\IAddressService.java
 D:\github\system\src\main\java\com\example\fusionsystem\service\IAdminService.java
 D:\github\system\src\main\java\com\example\fusionsystem\service\IBannerService.java
 D:\github\system\src\main\java\com\example\fusionsystem\service\ICollectService.java
 D:\github\system\src\main\java\com\example\fusionsystem\service\IGoodsService.java
+D:\github\system\src\main\java\com\example\fusionsystem\service\impl\AddressServiceImpl.java
 D:\github\system\src\main\java\com\example\fusionsystem\service\impl\AdminServiceImpl.java
 D:\github\system\src\main\java\com\example\fusionsystem\service\impl\BannerServiceImpl.java
 D:\github\system\src\main\java\com\example\fusionsystem\service\impl\CollectServiceImpl.java

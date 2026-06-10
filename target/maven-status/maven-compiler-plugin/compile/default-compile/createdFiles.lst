@@ -12,7 +12,9 @@ com\example\fusionsystem\Mapper\UserMapper.class
 com\example\fusionsystem\Mapper\BannerMapper.class
 com\example\fusionsystem\service\impl\UserServiceImpl.class
 com\example\fusionsystem\exception\GlobalExceptionHander.class
+com\example\fusionsystem\controller\AddressController.class
 com\example\fusionsystem\controller\TypeController.class
+com\example\fusionsystem\enity\Address.class
 com\example\fusionsystem\service\INoticeService.class
 com\example\fusionsystem\controller\WebController.class
 com\example\fusionsystem\config\interceptor\AuthAccess.class
@@ -46,4 +48,7 @@ com\example\fusionsystem\controller\CollectController.class
 com\example\fusionsystem\exception\ServiceException.class
 com\example\fusionsystem\common\Result.class
 com\example\fusionsystem\enity\Type.class
+com\example\fusionsystem\service\IAddressService.class
+com\example\fusionsystem\service\impl\AddressServiceImpl.class
 com\example\fusionsystem\service\impl\AdminServiceImpl.class
+com\example\fusionsystem\Mapper\AddressMapper.class
