@@ -227,7 +227,7 @@ onMounted(() => {
   width: 100%;
   border: 1px solid #e6e6e6;
   border-radius: 10px;
-  padding: 20px;
+  padding: 10px;
   display: flex;
   gap: 10px;
 
@@ -242,14 +242,14 @@ onMounted(() => {
 }
 
 .addr-text {
-  margin-bottom: 6px;
+  margin-bottom: 2px;
   font-weight: bold;
   font-size: 15px;
 }
 
 .addr-desc {
   font-size: 12px;
-  margin-bottom: 6px;
+  margin-bottom: 2px;
 }
 
 .addr-contact {
