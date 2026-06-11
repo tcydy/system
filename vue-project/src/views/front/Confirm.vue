@@ -61,7 +61,7 @@ const confirmOrder = async () => {
     ElMessage.warning('请选择您的收货地址')
     return
   }
-  if (goods.value.status !== '已上架') {
+  if (goods.value.status !== '上架') {
     ElMessage.warning('商品未上架或已卖出，请联系卖家确认')
     return
   }
