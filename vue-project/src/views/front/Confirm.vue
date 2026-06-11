@@ -193,7 +193,7 @@ onMounted(() => {
 .main-container {
   display: flex;
   gap: 20px;
-  width: 75%;
+  width: 80%;
   margin: 0 auto;
   padding: 20px;
 }
