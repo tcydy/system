@@ -8,37 +8,71 @@ import {Location} from '@element-plus/icons-vue';
 const route = useRoute()
 const router = useRouter()
 
-const id = ref(route.query.id)
-const goods = ref({})
+const address = ref([])
+const selectedAddressId = ref(null)
+const storedAccount = localStorage.getItem('account')
+const account = ref(storedAccount ? JSON.parse(storedAccount) : {})
 
-const loadGoods = ()=>{
+const id = ref(route.query.id)
+const goods = ref()
+
+const load = ()=>{
   request.get('/goods/' + id.value).then(res=>{
     goods.value=res.data
   })
 }
-loadGoods()
+// const loadGoods = ()=>{
+//   request.get('/goods/' + id.value).then(res=>{
+//     goods.value=res.data
+//   })
+// }
+// loadGoods()
 
-const addressId = ref(0)
-
-const address = ref([])
+// 加载收货地址
 const loadAddress = ()=>{
-  request.get('/address/page', {
-    params: {
-      pageNum: 1,
-      pageSize: 999
-    }
-  }).then(res=>{
-    address.value = res.data.records || []
-    if (address.value.length > 0) {
-      addressId.value = address.value[0].id
+  request.get('/address').then(res=>{
+    address.value = res.data
+    if (address.data.length > 0&& !selectedAddressId.value) {
+      selectedAddressId.value = res.data[0].id
     }
   })
 }
-loadAddress()
+
+//确认订单
+const confirmOrder = () => {
+  if(account.value==null){
+    ElMessage.warning('请先登录')
+    return
+  }
+  if(selectedAddressId.value==''){
+    ElMessage.warning('请选择您的收货地址')
+    return
+  }
+  if(goods.value.status!=='已上架'){
+    ElMessage.warning('商品未上架或已卖出，请联系卖家确认')
+    return
+  }
+  request.post('/orders',{
+    goodsId: id,
+    addressId: selectedAddressId.value
+  }).then(res=>{
+    if (res.code === '200') {
+      ElMessage.success('已下单，请及时支付订单！')
+      router.push('/front/orders')
+    } else {
+      ElMessage.error('res.msg')
+    }
+  })
+}
 
 const changeAddress = (id)=>{
-  addressId.value=id
+  selectedAddressId.value=id
 }
+
+onMounted(()=>{
+  load()
+  loadAddress()
+})
 
 </script>
 
@@ -59,7 +93,8 @@ const changeAddress = (id)=>{
 
         <div style="margin-top: 10px;display: grid;grid-template-columns:repeat(3,1fr);gap:10px">
 
-          <div class="address-card" :class="{'active' :item.id===addressId}" v-for="item in address" :key="item.id"@click="changeAddress(item.id)">
+          <div class="address-card" :class="{'active' :item.id===selectedAddressId}" 
+                v-for="item in address" :key="item.id"@click="changeAddress(item.id)">
             <div style="font-size: 24px">
                 <el-icon><Location/></el-icon>
             </div>
@@ -130,11 +165,7 @@ const changeAddress = (id)=>{
             <span style="font-size: 24px;font-weight: bolder;color: orangered">¥{{goods.price}}</span>
           </div>
         </div>
-
-        <div style="width:100%;display: flex;justify-content: space-around;margin-top: 20px">
-            <el-button type="danger" style="width:80%;border-radius: 50px;"size="large">立即购买</el-button>
-        </div>
-
+        <button class="confirm-btn"  size="large" @click="confirmOrder()">确认购买</button>
       </el-card>
     </div>
   </div>
@@ -157,5 +188,16 @@ const changeAddress = (id)=>{
         background-color: rgba(255, 69, 0, 0.1);
     }
 }
+.confirm-btn{
+    width:80%;
+    border-radius: 50px;
+    background-color: orangered;
+    color: white;font-size: 16px;
+    padding: 10px 0;
+    border: none;
+    cursor: pointer;
+}
+
+
 
 </style>

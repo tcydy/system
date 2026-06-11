@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.fusionsystem.common.Result;
 import com.example.fusionsystem.enity.Collect;
-import com.example.fusionsystem.service.IBannerService;
 import com.example.fusionsystem.service.ICollectService;
 import com.example.fusionsystem.utils.TokenUtils;
 import jakarta.annotation.Resource;

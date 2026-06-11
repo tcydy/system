@@ -1,8 +1,8 @@
 package com.example.fusionsystem.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.example.fusionsystem.enity.Type;
+import com.example.fusionsystem.enity.Orders;
 
-public interface ITypeService extends IService<Type> {
+public interface IOrdersService extends IService<Orders> {
 
 }

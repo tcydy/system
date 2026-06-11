@@ -18,10 +18,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
-
-import java.io.File;
-
 
 public class JwtInterceptor implements  HandlerInterceptor {
     @Resource

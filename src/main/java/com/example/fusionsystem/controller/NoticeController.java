@@ -5,9 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.fusionsystem.common.Result;
 import com.example.fusionsystem.enity.Notice;
-import com.example.fusionsystem.enity.User;
 import com.example.fusionsystem.service.INoticeService;
-import com.example.fusionsystem.service.IUserService;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 

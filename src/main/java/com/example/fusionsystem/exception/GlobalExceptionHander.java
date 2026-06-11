@@ -4,7 +4,6 @@ package com.example.fusionsystem.exception;
 import com.example.fusionsystem.common.Result;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice

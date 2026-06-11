@@ -7,7 +7,6 @@ import com.example.fusionsystem.Mapper.AdminMapper;
 import com.example.fusionsystem.common.Constants;
 import com.example.fusionsystem.enity.Account;
 import com.example.fusionsystem.enity.Admin;
-import com.example.fusionsystem.enity.User;
 import com.example.fusionsystem.exception.ServiceException;
 import com.example.fusionsystem.service.IAdminService;
 import com.example.fusionsystem.utils.TokenUtils;

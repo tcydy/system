@@ -3,7 +3,6 @@ package com.example.fusionsystem.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.fusionsystem.Mapper.UserMapper;
 import com.example.fusionsystem.common.Constants;
@@ -13,7 +12,6 @@ import com.example.fusionsystem.exception.ServiceException;
 import com.example.fusionsystem.service.IUserService;
 import com.example.fusionsystem.utils.TokenUtils;
 import jakarta.annotation.Resource;
-import org.apache.catalina.realm.UserDatabaseRealm;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
