@@ -186,8 +186,14 @@ loadUser()
         </div>
       </div>
 
-      <div style="display: grid;grid-template-columns:repeat(6,1fr);gap:20px;overflow: hidden">
-        <div style="height: 400px;width: 100%;background-color: white;overflow: hidden;border:1px solid #e5e5e5;border-radius: 8px;box-shadow: 0 2px 8px rgba(0,0,0,0.04)" v-for="item in goods" :key="item.id" @click="router.push('/front/goodsDetail?id=' + item.id)">
+      <div style="
+        display: grid;
+        grid-template-columns:repeat(4,1fr);
+        gap:20px;
+        grid-auto-flow: row;
+
+      ">
+        <div style="height: 380px;width: 100%;background-color: white;overflow: hidden;border:1px solid #e5e5e5;border-radius: 8px;box-shadow: 0 2px 8px rgba(0,0,0,0.04)" v-for="item in goods" :key="item.id" @click="router.push('/front/goodsDetail?id=' + item.id)">
           <div style="height: 240px;width: 100%">
             <img :src="item.img" alt="" style="height:100%;width:100%;object-fit:cover;overflow: hidden">
           </div>
@@ -211,7 +217,7 @@ loadUser()
                 <el-tag style="color: #409eff" type="place" effect="plain">{{getProvine(item.place)}}</el-tag>
               </div>
             </div>
-            <el-divider></el-divider>
+            <el-divider style="margin: 15px;"></el-divider>
 
             <div style="display: flex;gap: 5px;align-items: center">
               <div>
