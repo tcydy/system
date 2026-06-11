@@ -238,11 +238,21 @@ const confirmBatchDelete=()=>{
 const  handleImgUploadSuccess=(res)=>{
   form.value.img=res
 };
+//图片上传失败处理
+const  handleImgUploadFail=(error)=>{
+  ElMessage.error('图片上传失败,请重试')
+};
+
+
 //多图列表
 const imgList = ref([])
 //多图片上传成功处理
 const handleImgListUploadSuccess=(res)=>{
   imgList.value.push(res);
+};
+//多图片上传失败处理
+const handleImgListUploadFail=(error)=>{
+  ElMessage.error('图片上传失败,请重试')
 };
 
 //删除已上传的图片
@@ -410,7 +420,7 @@ const getUserNickname=(userId)=>{
           <el-form-item label="图片上传">
             <div class="upload-container">
               <el-avatar v-if="form.img" :src="form.img" :size="80" />
-              <el-upload :action="`${serverHost}/web/upload`" :on-success="handleImgUploadSuccess" :show-file-list="false">
+              <el-upload :action="`${serverHost}/web/upload`" :on-success="handleImgUploadSuccess":on-error="handleImgUploadFail" :show-file-list="false">
                 <el-button type="primary" :icon="UploadFilled">{{ form.img ? '更换图片' : '上传图片' }}</el-button>
               </el-upload>
             </div>
@@ -425,7 +435,7 @@ const getUserNickname=(userId)=>{
                 <el-button type="danger" circle:icon="Delete" class="delete-btn"@click="removeImgList(index)"></el-button>
               </div>
             </div>
-            <el-upload :action="`${serverHost}/web/upload`" :on-success="handleImgListUploadSuccess" :show-file-list="false" multiple>
+            <el-upload :action="`${serverHost}/web/upload`" :on-success="handleImgListUploadSuccess":on-error="handleImgListUploadFail" :show-file-list="false" multiple>
               <el-button type="primary":icon="UploadFilled">上传图片</el-button>
             </el-upload>
 

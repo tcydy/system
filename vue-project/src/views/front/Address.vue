@@ -45,11 +45,11 @@ const load = () => {
 
 // 省市区选择变化
  const handleAreaChange = (value) => {
-   console.log('选中的值:', value)  // 调试用
+   //console.log('选中的值:', value)  // 调试用
    if (value && value.length > 0) {
      // 用斜杠连接
      form.address = value.join('/')
-     console.log('拼接后:', form.address)  // 调试用
+     //console.log('拼接后:', form.address)  // 调试用
    } else {
      form.address = ''
    }
@@ -100,7 +100,10 @@ const resetForm = () => {
   form.info = ''
   selectedArea.value = []
 }
-
+//退出
+const back=()=>{
+  window.history.back()
+}
 // 新增
 const openAdd = () => {
   dialogTitle.value = '新增地址'
@@ -171,40 +174,38 @@ onMounted(() => {
   load()
 })
 </script>
-
 <template>
-  <div style="width: 60%; margin: 0 auto; min-height: 100vh; padding: 20px; background-color: #efefef">
-    <el-card style="border-radius: 20px">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
+  <div class="page-wrap">
+    <el-card class="header-card">
+      <div class="header-box">
         <div>
-          <h1 style="margin: 0;">我的收货地址</h1>
+          <h1 class="title">我的收货地址</h1>
         </div>
-        <div>
-          <el-button type="primary" size="large" @click="openAdd">新增地址</el-button>
+        <div class="btn-group">
+          <el-button id="add-address-btn" type="primary" size="large" @click="openAdd">新增地址</el-button>
+          <el-button id="back-btn" type="info" plain size="large" @click="back">返回</el-button>
         </div>
       </div>
     </el-card>
 
     <!-- 地址列表 - 卡片形式 -->
-    <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 20px">
-
-      <el-card v-for="item in tableData" :key="item.id" style="border-radius: 20px">
-
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div style="display: flex; flex-direction: column; gap: 8px; flex: 1;">
-            <div style="display: flex; gap: 20px; align-items: baseline;">
-              <span style="font-weight: bold; font-size: 16px;">{{ item.name }}</span>
-              <span style="color: #666; font-size: 14px;">{{ item.phone }}</span>
+    <div class="list-wrap">
+      <el-card v-for="item in tableData" :key="item.id" class="address-card">
+        <div class="address-item">
+          <div class="address-info">
+            <div class="name-phone">
+              <span class="name">{{ item.name }}</span>
+              <span class="phone">{{ item.phone }}</span>
             </div>
 
-            <div style="color: #333; font-size: 14px; display: flex; align-items: center;">
-              <el-icon style="margin-right: 4px; color: orangered;"><Location /></el-icon>
+            <div class="address-detail">
+              <el-icon class="location-icon"><Location /></el-icon>
               <span>{{ item.address }}</span>
-              <span style="margin: 0 5px;"></span>
+              <span class="split"></span>
               <span>{{ item.info }}</span>
             </div>
           </div>
-          <div style="display: flex; gap: 10px; margin-left: 20px;">
+          <div class="btn-group">
             <el-button type="primary" plain size="small" @click="openEdit(item)">编辑</el-button>
             <el-button type="danger" plain size="small" @click="handleDelete(item.id)">删除</el-button>
           </div>
@@ -212,11 +213,11 @@ onMounted(() => {
       </el-card>
 
       <!-- 空状态 -->
-      <el-card v-if="tableData.length === 0" style="border-radius: 20px; text-align: center; padding: 40px;">
-        <div style="color: #999;">
-          <div style="font-size: 48px; margin-bottom: 16px;">📭</div>
+      <el-card v-if="tableData.length === 0" class="empty-card">
+        <div class="empty-tip">
+          <div class="empty-icon">📭</div>
           <div>暂无收货地址</div>
-          <div style="font-size: 12px; margin-top: 8px;">点击「新增地址」添加你的收货地址</div>
+          <div class="empty-desc">点击「新增地址」添加你的收货地址</div>
         </div>
       </el-card>
     </div>
@@ -237,7 +238,7 @@ onMounted(() => {
             :props="{ value: 'label' }"
             placeholder="请选择省/市/区"
             clearable
-            style="width:100%"
+            class="cascader-full"
             @change="handleAreaChange"
           />
         </el-form-item>
@@ -254,5 +255,116 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.page-wrap {
+  width: 80%;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 20px;
+  background-color: #efefef;
+}
 
+.header-card {
+  border-radius: 20px;
+}
+
+.header-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .btn-group {
+    display: flex;
+    gap: 8px;
+  }
+}
+
+.title {
+  margin: 0;
+}
+
+.list-wrap {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.address-card {
+  border-radius: 20px;
+}
+
+.address-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.address-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.name-phone {
+  display: flex;
+  gap: 20px;
+  align-items: baseline;
+}
+
+.name {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.phone {
+  color: #666;
+  font-size: 14px;
+}
+
+.address-detail {
+  color: #333;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+}
+
+.location-icon {
+  margin-right: 4px;
+  color: orangered;
+}
+
+.split {
+  margin: 0 5px;
+}
+
+.btn-group {
+  display: flex;
+  gap: 10px;
+  margin-left: 20px;
+}
+
+.empty-card {
+  border-radius: 20px;
+  text-align: center;
+  padding: 40px;
+}
+
+.empty-tip {
+  color: #999;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.empty-desc {
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.cascader-full {
+  width: 100%;
+}
 </style>

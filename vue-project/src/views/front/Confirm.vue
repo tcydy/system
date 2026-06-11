@@ -17,7 +17,7 @@ const storedAccount = localStorage.getItem('account')
 const account = ref(storedAccount ? JSON.parse(storedAccount) : {})
 
 // 商品ID、商品信息
-const id = ref(route.query.id || '')
+const id = ref(route.query.id ? Number(route.query.id) : null)//接收的是字符串，但后端的itemId是数字，所以这里转换成数字类型
 const goods = ref({})
 
 // 加载商品详情
@@ -35,7 +35,13 @@ const load = async () => {
 // 加载收货地址
 const loadAddress = async () => {
   try {
-    const res = await request.get('/address')
+    const res = await request.get('/address', {
+      params: {
+        userId: account.value.id
+      }
+    })
+    //console.log('地址列表响应:', res)  // 调试用
+    //console.log('当前用户:', account.value)  // 调试用
     address.value = res.data || []
     if (address.value.length > 0 && !selectedAddressId.value) {
       selectedAddressId.value = address.value[0].id
@@ -53,6 +59,12 @@ const changeAddress = (addrId) => {
 
 // 确认下单
 const confirmOrder = async () => {
+  //test
+  // console.log('路由原始query:', route.query)
+  // console.log('id.value =', id.value, '类型:', typeof id.value)
+  // console.log('goods.status =', goods.value?.status)
+  // console.log('goods.value.status =', goods.value.status)
+
   if (!account.value || Object.keys(account.value).length === 0) {
     ElMessage.warning('请先登录')
     return
@@ -68,7 +80,7 @@ const confirmOrder = async () => {
 
   try {
     const res = await request.post('/orders', {
-      goodsId: id.value,
+      itemId: id.value,
       addressId: selectedAddressId.value
     })
     if (res.code === '200') {

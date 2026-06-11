@@ -52,10 +52,15 @@ const logout=()=>{
 //刷新用户信息
 const handleUpdateAccount=(updatedAccount)=>
 {
-  //更新父组件中的用户信息
+  //更新组件中的用户信息
   account.value=updatedAccount
   localStorage.setItem('account',JSON.stringify(updatedAccount))
   ElMessage.success('头像上传成功')
+}
+
+//刷新用户信息失败
+const handleUpdateAccountFail=()=>{
+  ElMessage.error('头像上传失败')
 }
 
 </script>
@@ -169,7 +174,7 @@ const handleUpdateAccount=(updatedAccount)=>
       </aside>
 <!--      主要内容区域-->
       <main class="admin-content">
-        <router-view @update-account="handleUpdateAccount"></router-view>
+        <router-view @update-account="handleUpdateAccount" @update-account-fail="handleUpdateAccountFail"></router-view>
       </main>
     </div>
 

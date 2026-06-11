@@ -34,7 +34,8 @@ public class OrdersController {
 
     @PostMapping
     public Result save(@RequestBody Orders orders) {
-        if(orders.getId() == null) {
+        if (orders.getId() == null) {
+
             orders.setNo(DateUtil.format(new Date(), "yyyyMMddHHmmss") + RandomUtil.randomNumbers(6));
             Goods goods = goodsService.getById(orders.getItemId());
             

@@ -57,7 +57,7 @@ const loadType =()=>{
         })
     })
 }
-loadType()
+
 
 const changeType = (id) =>{
     typeId.value = id

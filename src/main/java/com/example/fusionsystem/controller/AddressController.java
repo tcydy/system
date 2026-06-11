@@ -44,7 +44,7 @@ public class AddressController {
     public Result findAll(){
         LambdaQueryWrapper<Address> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Address::getUserId,TokenUtils.getCurrentUser().getId());
-        return Result.success(addressService.list());
+        return Result.success(addressService.list(wrapper));
     }
 
     @GetMapping("/{id}")

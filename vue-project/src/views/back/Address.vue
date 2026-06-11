@@ -30,9 +30,9 @@ const form = reactive({
 // 省市区相关
 const selectedArea = ref([])
 
-// 根据用户ID获取昵称（兼容 userId 和 userID）
+// 根据用户ID获取昵称
 function getUserNickname(row) {
-  const userId = row.userId || row.userID
+  const userId = row.userId
   if (!userId) return '未知用户'
   const user = userMap.value[userId]
   if (user) {
@@ -148,7 +148,7 @@ function openAdd() {
 // 编辑
 function openEdit(row) {
   form.id = row.id
-  form.userId = row.userId || row.userID
+  form.userId = row.userId
   form.name = row.name
   form.phone = row.phone
   form.address = row.address || ''
@@ -161,7 +161,7 @@ function openEdit(row) {
 // 保存
 async function saveForm() {
   if (!form.userId) {
-    ElMessage.warning('请选择用户')
+    ElMessage.warning('请登录')
     return
   }
   if (!form.name) {
@@ -253,7 +253,7 @@ onMounted(() => {
 
       <el-table-column label="用户信息" align="center" width="150">
         <template #default="scope">
-          <div>用户ID: {{ scope.row.userId || scope.row.userID }}</div>
+          <div>用户ID: {{ scope.row.userId }}</div>
           <div style="font-size: 12px; color: #666;">
             {{ getUserNickname(scope.row) }}
           </div>

@@ -30,7 +30,7 @@ const logout=()=>{
 
 const handleUpdateAccount=(updatedAccount)=>
 {
-  //更新父组件中的用户信息
+  //更新组件中的用户信息
   account.value=updatedAccount
   localStorage.setItem('account',JSON.stringify(updatedAccount))
   ElMessage.success('用户信息已更新')
