@@ -64,6 +64,11 @@ const cancel=()=>{
   ElMessage.info('已取消修改');
 }
 
+//退出
+const back=()=>{
+  window.history.back()
+}
+
 //头像上传成功处理
 const  handleAvatarSuccess=(res)=>{
   console.log('上传返回:', res)
@@ -101,7 +106,7 @@ const beforeAvatarUpload=(file)=>{
     <el-card class="person-card">
       <h2 class="card-title">个人信息</h2>
 
-      <el-form label-width="80px">
+      <el-form label-width="50px">
         <div class="avatar-container">
           <el-upload
               class="avatar-uploader"
@@ -117,32 +122,42 @@ const beforeAvatarUpload=(file)=>{
           </el-upload>
           <div class="avatar-tip">点击上传头像 (支持jpg/png,最大2MB)</div>
         </div>
+
         <el-form-item label="用户名">
           <el-input v-model="form.username" disabled autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="昵称">
           <el-input v-model="form.nickname" autocomplete="off"></el-input>
         </el-form-item>
+
+        <!-- 按钮区域：独立布局，不再嵌套到头像容器里 -->
         <el-form-item>
-          <el-button type="primary" @click="save">保存修改</el-button>
-          <el-button @click="cancel" style="margin-left: 10px">取消</el-button>
+          <div class="form-footer">
+            <el-button type="primary" @click="save">保存修改</el-button>
+            <div class="right-btn-group">
+              <el-button @click="cancel">取消</el-button>
+              <el-button @click="back">返回</el-button>
+            </div>
+          </div>
         </el-form-item>
+
       </el-form>
     </el-card>
   </div>
 </template>
-
 
 <style lang="scss" scoped>
 .person-container{
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 10px;
+  
 
   .person-card{
     max-width: 600px;
     width: 100%;
+    padding: 20px;
 
     .card-title{
       text-align: center;
@@ -164,6 +179,18 @@ const beforeAvatarUpload=(file)=>{
       }
     }
   }
+}
+
+/* 按钮布局核心样式 */
+.form-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+.right-btn-group {
+  display: flex;
+  gap: 10px; /* 取消、返回两个按钮之间的间距 */
 }
 
 .avatar-uploader-icon{
@@ -219,5 +246,4 @@ const beforeAvatarUpload=(file)=>{
     transform: scale(1.05);
   }
 }
-
 </style>

@@ -158,7 +158,6 @@ const  handleImgUploadSuccess=(res)=>{
 }
 
 </script>
-
 <template>
   <div class="content-container">
 
@@ -243,5 +242,47 @@ const  handleImgUploadSuccess=(res)=>{
 </template>
 
 <style scoped>
+.content-container {
+  padding: 20px;
+}
 
+/* 搜索栏布局与间距 */
+.header-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.header-section .el-input {
+  width: 280px;
+}
+
+/* 顶部功能按钮栏 */
+.toolbar-section {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+/* 分页靠右 */
+.pagination-section {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 15px;
+}
+
+/* 上传区域排版 */
+.upload-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* 弹窗底部按钮居中+间距 */
+.dialog-footer {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
 </style>

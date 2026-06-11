@@ -286,5 +286,47 @@ const changeState = (row) =>{
 </template>
 
 <style scoped>
+.content-container {
+  padding: 20px;
+}
 
+/* 搜索栏布局 */
+.header-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.header-section .el-input {
+  width: 280px;
+}
+
+/* 顶部按钮栏 */
+.toolbar-section {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+/* 分页靠右 */
+.pagination-section {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 15px;
+}
+
+/* 上传区域：头像和按钮横向排列 */
+.upload-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* 弹窗底部按钮间距 */
+.dialog-footer {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
 </style>

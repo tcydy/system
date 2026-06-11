@@ -105,7 +105,7 @@ loadUser()
             <div v-for="item in types":key="item.id" style="display: flex;" class="type-item">
 
               <div style="display:flex;gap:10px;" @click="router.push('/front/search?typeId='+item.id)+'&keyword='+null">
-                  <img :src="item.icon" style="width:20px;height: 20px;object-fit: fill;margin-left: 20px;" alt="">
+                  <img :src="item.icon" style="width:20px;height: 20px;object-fit: fill;" alt="">
                   <span style="font-weight: 500">{{ item.name }}</span>
               </div>
 
@@ -237,7 +237,8 @@ loadUser()
 <style scoped>
 
 .type-item:hover{
-  background-color: #757981;
+  background-color: #c8c8c8;
+  border-radius: 5px;
 }
 
 .hotType-item{

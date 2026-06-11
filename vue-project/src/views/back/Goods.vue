@@ -304,7 +304,6 @@ const getUserNickname=(userId)=>{
 };
 
 </script>
-
 <template>
   <div class="content-container">
 
@@ -544,7 +543,6 @@ const getUserNickname=(userId)=>{
 </template>
 
 <style scoped>
-
 .image-list{
   display: flex;
   flex-wrap: wrap;
@@ -560,5 +558,15 @@ const getUserNickname=(userId)=>{
   right: -8px;
   transform:scale(0.8);
 }
+/* 搜索栏布局 */
+.header-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
 
+.header-section .el-input {
+  width: 280px;
+}
 </style>

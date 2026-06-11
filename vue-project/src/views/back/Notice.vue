@@ -156,15 +156,15 @@ const confirmBatchDelete=()=>{
 const  handleAvatarSuccess=(res)=>{
   form.value.avatarUrl=res
 }
-
 </script>
+
 
 <template>
   <div class="content-container">
 
 <!--    搜索区域-->
     <div class="header-section">
-      <el-input v-model="searchForm.keyword"placeholder="请输入昵称" clear="filter-input":prefix-icon="Search" clearable/>
+      <el-input v-model="searchForm.keyword"placeholder="请输入标题关键词" clear="filter-input":prefix-icon="Search" clearable/>
       <el-button class="ml-10" plain type="primary"@click="load">搜索</el-button>
       <el-button plain type="info" @click="reset">重置</el-button>
     </div>
@@ -240,5 +240,40 @@ const  handleAvatarSuccess=(res)=>{
 </template>
 
 <style scoped>
+.content-container {
+  padding: 20px;
+}
 
+/* 搜索栏布局 */
+.header-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.header-section .el-input {
+  width: 260px;
+}
+
+/* 顶部工具栏 */
+.toolbar-section {
+  margin-bottom: 15px;
+  display: flex;
+  gap: 10px;
+}
+
+/* 分页区域居中+间距 */
+.pagination-section {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 15px;
+}
+
+/* 弹窗底部按钮间距 */
+.dialog-footer {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
 </style>

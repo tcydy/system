@@ -159,9 +159,8 @@ const confirmBatchDelete = () => {
 const  handleAvatarUrlUploadSuccess=(res)=>{
   form.value.avatarUrl=res
 }
-
-
 </script>
+
 
 <template>
   <div class="content-container">
@@ -251,5 +250,42 @@ const  handleAvatarUrlUploadSuccess=(res)=>{
 </template>
 
 <style scoped>
+.content-container {
+  padding: 20px;
+}
 
+.header-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.filter-input {
+  width: 280px;
+}
+
+.toolbar-section {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.pagination-section {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 15px;
+}
+
+.upload-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
 </style>

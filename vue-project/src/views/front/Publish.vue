@@ -81,6 +81,10 @@ const save=()=>{
       ElMessage.error("保存失败")
     }
   })
+
+  //跳转到首页，不要用router
+  window.location.href='/front/home'
+
 }
 
 
@@ -123,7 +127,7 @@ loadUser()
 <template>
     <div style="width:100%;height:100%;background-color:#f1f1f1;padding:50px">
 
-        <div style="width: 50%;margin: 0 auto;min-height: 200px;">
+        <div style="width: 80%;margin: 0 auto;min-height: 200px;">
             <el-card style="border-radius: 20px;">
 
                 <h1>发布闲置</h1>
@@ -135,8 +139,8 @@ loadUser()
 
                         <el-form-item label="商品主图" required>
                             <div class="upload-container">
-                            <el-avatar v-if="form.img" :src="form.img" :size="80" />
-                            <el-upload :action="`${serverHost}/web/upload`" :on-success="handleImgUploadSuccess" :show-file-list="false">
+                            <el-avatar v-if="form.img" :src="form.img" :size="300" style="border-radius: 0;"/>
+                            <el-upload :action="`${serverHost}/web/upload`" :on-success="handleImgUploadSuccess" :show-file-list="false" >
                                 <el-button type="primary" :icon="UploadFilled">{{ form.img ? '更换图片' : '上传图片' }}</el-button>
                             </el-upload>
                             </div>
@@ -236,7 +240,9 @@ loadUser()
                     </el-form>
 
                     <div style="display: flex;justify-content: space-around;margin-top: 100px">
-                        <button @click="save" style="background-color: orange;color:white;width: 400px;height:50px;border:none;border-radius: 50px;">发布</button>
+                        <button @click="save" style="background-color: orange;color:white;width: 400px;height:50px;border:none;border-radius: 50px;">
+                          发布
+                        </button>
 
                     </div>
 

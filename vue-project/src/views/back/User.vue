@@ -4,7 +4,8 @@
 import {reactive, ref} from "vue";
 import request from "@/utils/request.js";
 import {ElMessage, ElMessageBox} from "element-plus";
-import {Delete, Edit, Plus, Search, UploadFilled} from "@element-plus/icons-vue";
+import { Delete, Edit, Plus, Search, UploadFilled } from "@element-plus/icons-vue";
+import {serverHost} from "../../../config/config.default.js";
 
 
 const tableData=ref([])
@@ -157,8 +158,12 @@ const  handleAvatarSuccess=(res)=>{
   form.value.avatarUrl=res
 }
 
-</script>
+//头像上传失败处理
+const handleAvatarError=()=>{
+  ElMessage.error("头像上传失败")
+}
 
+</script>
 <template>
   <div class="content-container">
 
@@ -219,8 +224,13 @@ const  handleAvatarSuccess=(res)=>{
       <el-form  :model="form" label-width="100px">
         <el-form-item label="头像" required>
           <div class="upload-container">
-            <el-avatar v-if="form.avatarUrl":src="form.avatarUrl" :sie="80"/>
-            <el-upload :action="`${serverHost}/web/upload`" :on-success="handleAvatarSuccess" :show-file-list="false">
+            <el-avatar v-if="form.avatarUrl":src="form.avatarUrl" :size="80"/>
+            <el-upload 
+              :action="`${serverHost}/web/upload`" 
+              :on-success="handleAvatarSuccess" 
+              :on-error="handleAvatarError" 
+              :show-file-list="false"
+            >
               <el-button type="primary" :icon="UploadFilled">{{form.avatarUrl?'更换图片':'上传图片'}}</el-button>
             </el-upload>
           </div>
@@ -246,5 +256,47 @@ const  handleAvatarSuccess=(res)=>{
 </template>
 
 <style scoped>
+.content-container {
+  padding: 20px;
+}
 
+/* 搜索栏布局 */
+.header-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.header-section .el-input {
+  width: 280px;
+}
+
+/* 顶部功能按钮区 */
+.toolbar-section {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+/* 分页靠右 */
+.pagination-section {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 15px;
+}
+
+/* 头像上传区域横向排列 */
+.upload-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* 弹窗底部按钮间距 */
+.dialog-footer {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
 </style>

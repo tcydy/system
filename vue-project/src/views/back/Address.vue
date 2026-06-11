@@ -133,6 +133,11 @@ async function getList() {
   }
 }
 
+const reset = () => {
+  keyword.value = ''
+  getList()
+}
+
 // 新增
 function openAdd() {
   form.id = null
@@ -235,6 +240,7 @@ onMounted(() => {
         @keyup.enter="getList"
       />
       <el-button type="primary" @click="getList">搜索</el-button>
+      <el-button plain type="info" @click="reset">重置</el-button>
       <el-button @click="openAdd">新增地址</el-button>
       <el-button type="danger" @click="batchDelete" :disabled="!selectedIds.length">
         批量删除
@@ -265,12 +271,16 @@ onMounted(() => {
       <el-table-column prop="address" label="省市区" align="center" />
       <el-table-column prop="info" label="详细地址" align="center" />
 
+
+      
       <el-table-column label="操作" align="center" width="180">
         <template #default="scope">
-          <el-button link type="primary" @click="openEdit(scope.row)">编辑</el-button>
-          <el-button link type="danger" @click="handleDelete(scope.row.id)">删除</el-button>
+          <el-button link type="primary" class="table-btn" @click="openEdit(scope.row)" >编辑</el-button>
+          <el-button link type="danger" class="table-btn" @click="handleDelete(scope.row.id)">删除</el-button>
         </template>
       </el-table-column>
+      
+      
     </el-table>
 
     <!-- 分页 -->
@@ -346,5 +356,11 @@ onMounted(() => {
 }
 .search-box .el-input {
   margin-right: 10px;
+}
+.table-btn {
+  font-size: 16px;
+  padding:4px;
+  background:#4084d91a;
+  border-color:#4084d91a;
 }
 </style>

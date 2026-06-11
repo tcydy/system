@@ -74,7 +74,7 @@ const toConfirm = () => {
 
 <template>
 
-  <div style="width:60%;margin: 0 auto;min-height: 300px;padding:30px;background-color: #f4f4f4;">
+  <div style="width:80%;margin: 0 auto;min-height: 300px;padding:30px;background-color: #f4f4f4;">
     <el-card style="border-radius: 10px;">
         <div style="display: flex;gap:10px">
             <div>
@@ -153,10 +153,15 @@ const toConfirm = () => {
 
             <el-divider></el-divider>
 
-            <div style="display:flex;gap: 10px;">
+            <div class="buttons" style="display:flex;gap: 10px;">
 
-                <button style="height: 50px;width: 150px;text-align: center;background-color: orange;color: black;border: none">聊一聊</button>
-                <button @click="toConfirm" style="height: 50px;width: 200px;text-align: center;background-color: black;color: white;border: none">立即购买</button>                <button style="height: 50px;min-width: 100px;text-align: center;border: none" @click="collect">
+                <button >
+                    聊一聊
+                </button>
+                <button @click="toConfirm" >
+                    立即购买
+                </button>                
+                <button style="" @click="collect">
                     <el-icon v-if="goods.isCollected"><StarFilled/></el-icon>
                     <el-icon v-else><Star/></el-icon>
                     {{ goods.isCollected ?'已收藏':'收藏' }}
@@ -174,5 +179,19 @@ const toConfirm = () => {
 </template>
 
 <style scoped>
+.buttons{
+    button{
+        font-size: 16px;
+        height: 50px;
+        min-width: 100px;
+        text-align: center;
+        border: none;
+        border-radius: 5px;
+    }
+    button:hover{
+        opacity: 0.8;
+        background-color: rgb(255, 230, 24);
+    }
+}
 
 </style>
