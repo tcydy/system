@@ -96,49 +96,34 @@ loadUser()
       </div>
 
 
+      
       <div style="display: flex;gap:20px;height: 430px;padding: 10px">
-
+        <!-- 左边分类 -->
         <div style="height: 100%;flex:1;padding: 10px;background-color: white;border:1px solid #dfdfdf;border-radius: 10px;">
-
-          <div style="width:100%;height: 100%;display:flex;flex-direction: column;gap:18px;justify-content: space-around;">
-
+          <div style="width:100%;height: 100%;display:flex;flex-direction: column;gap:18px;justify-content: center;align-items: center;">
             <div v-for="item in types":key="item.id" style="display: flex;" class="type-item">
-
-              <div style="display:flex;gap:10px;" @click="router.push('/front/search?typeId='+item.id)+'&keyword='+null">
+              <div id="card-jump" style="display:flex;gap:10px;" @click="router.push('/front/search?typeId='+item.id)+'&keyword='+null">
                   <img :src="item.icon" style="width:20px;height: 20px;object-fit: fill;" alt="">
                   <span style="font-weight: 500">{{ item.name }}</span>
               </div>
-
+            </div>
           </div>
-
         </div>
-
-
-          
-        
-        </div>
-
+        <!-- 中间轮播提示条 -->
         <div style="height: 100%;flex:2;border-radius: 10px;">
-
-
           <el-carousel height="410px">
             <el-carousel-item v-for="banner in banners" :key="banner.id">
-
              <div style="height: 100%;width: 100%;position: relative">
-              <div style="position: absolute;top:50%;left:10%">
-                <span style="font-size: 20px;color:white;font-weight: bolder">{{ banner.name }}</span>
-              </div>
-               <img :src="banner.img" style="height: 100%;width: 100%;object-fit: fill;border-radius: 10px;" alt="">
+                <div style="position: absolute;top:50%;left:10%">
+                  <span style="font-size: 20px;color:white;font-weight: bolder">{{ banner.name }}</span>
+                </div>
+                <img :src="banner.img" style="height: 100%;width: 100%;object-fit: fill;border-radius: 10px;" alt="">
              </div>
-
             </el-carousel-item>
           </el-carousel>
-
-        
         </div>
-
+        <!-- 右边热门分类 -->
         <div style="height: 100%;flex:5;display: grid;grid-template-columns: repeat(2,1fr);gap:20px">
-
           <div v-for="(item,index) in hotTypes":key="item.id" class="hotType-item":style="{background : categoryColors[index]}">
             
             <div style width="180px">
@@ -157,15 +142,13 @@ loadUser()
               <div v-for="item in 3":key="item" style="flex:1"  class="hotType-item-goods">
                 <div style="height:90px;width:100%">
                   <img src="" style="width:100%;height: 100%;object-fit: cover;border-radius: 10px;" alt="">
-
                 </div>
                 <div style="text-align: center;margin-top: 20px;">
                   <span style="color: orangered;font-size: 16px;font-weight: 1000;">$100</span>
                 </div>
               </div>
-              
             </div>
-            
+
           </div>
 
         </div>
@@ -242,7 +225,7 @@ loadUser()
 
 <style scoped>
 
-.type-item:hover{
+#card-jump:hover{
   background-color: #c8c8c8;
   border-radius: 5px;
 }

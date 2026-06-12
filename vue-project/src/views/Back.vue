@@ -4,8 +4,7 @@ import {useRoute, useRouter} from "vue-router";
 import {computed, ref} from "vue";
 import {ElMessage} from "element-plus";
 import {projectName} from "../../config/config.default.js";
-import {House, SwitchButton, UserFilled,Lock,User,Goods} from "@element-plus/icons-vue";
-
+import {Lock,SwitchButton,House,Bell,ChatSquare,MessageBox,Goods,Location,ShoppingBag,UserFilled,User} from "@element-plus/icons-vue";
 
 //路由实例
 const router=useRouter();
@@ -64,15 +63,14 @@ const handleUpdateAccountFail=()=>{
 }
 
 </script>
-
 <template>
   <div class="admin-layout" :class="themes[themeStatus]">
-<!--    顶部区域-->
+    <!-- 顶部区域 -->
     <header class="admin-header">
       <div class="header-left">
-        <div class="logo-container":style="{width:sideWidth+'px'}"@click="openThemeDrawer">
+        <div class="logo-container" :style="{width: sideWidth + 'px'}" @click="openThemeDrawer">
           <img src="../../config/Logo.svg" alt="Logo" class="logo-image"/>
-          <h1 class="logo-text">{{projectName}}</h1>
+          <h1 class="logo-text">{{ projectName }}</h1>
         </div>
       </div>
       <div class="header-right">
@@ -81,18 +79,18 @@ const handleUpdateAccountFail=()=>{
             <div class="user-avatar">
               <img :src="account.avatarUrl"/>
             </div>
-            <span class="user-name">{{account.nickname}}</span>
+            <span class="user-name">{{ account.nickname }}</span>
           </div>
           <template #dropdown>
             <el-dropdown-menu>
-<!--              个人信息页面-->
+              <!-- 个人信息页面 -->
               <el-dropdown-item v-if="account.role==='ROLE_ADMIN'">
                 <router-link to="/back/Person" class="dropdown-link">
                   <el-icon><User/></el-icon>
                   <span>个人信息</span>
                 </router-link>
               </el-dropdown-item>
-<!--              个人信息页面-->
+              <!-- 个人信息页面 -->
               <el-dropdown-item>
                 <router-link to="/back/Password" class="dropdown-link">
                   <el-icon><Lock/></el-icon>
@@ -111,54 +109,58 @@ const handleUpdateAccountFail=()=>{
       </div>
     </header>
 
-<!--    内容区域-->
+    <!-- 内容区域 -->
     <div class="admin-container">
-<!--      左侧菜单区域-->
-      <aside class="admin-sidebar" :style="{width:sideWidth+'px'}">
+      <!-- 左侧菜单区域 -->
+      <aside class="admin-sidebar" :style="{width: sideWidth + 'px'}">
         <el-menu
           :default-active="activeMenu"
           :collapse="isCollapse"
           router
-          :collapse-transition="false">
-
-<!--          后台菜单-->
+          :collapse-transition="false"
+        >
+          <!-- 后台菜单 -->
           <el-menu-item index="/back/home">
             <el-icon><House/></el-icon>
             <template #title>后台首页</template>
           </el-menu-item>
 
           <el-menu-item index="/back/notice">
-                      <el-icon><House/></el-icon>
-                      <template #title>公告管理</template>
+            <el-icon><Bell /></el-icon>
+            <template #title>公告管理</template>
           </el-menu-item>
 
           <el-menu-item index="/back/banner">
-                      <el-icon><House/></el-icon>
-                      <template #title>轮播图管理</template>
+            <el-icon><ChatSquare /></el-icon>
+            <template #title>轮播图管理</template>
           </el-menu-item>
 
           <el-menu-item index="/back/type">
-                      <el-icon><House/></el-icon>
-                      <template #title>闲置物品分类管理</template>
+            <el-icon><MessageBox /></el-icon>
+            <template #title>闲置物品分类管理</template>
           </el-menu-item>
 
           <el-menu-item index="/back/goods">
-          <el-icon><House/></el-icon>
-          <template #title>闲置物品管理</template>
-        </el-menu-item>
+            <el-icon><Goods/></el-icon>
+            <template #title>闲置物品管理</template>
+          </el-menu-item>
 
-        <el-menu-item index="/back/address">
-                  <el-icon><House/></el-icon>
-                  <template #title>收货地址管理</template>
-                </el-menu-item>
+          <el-menu-item index="/back/address">
+            <el-icon><Location /></el-icon>
+            <template #title>收货地址管理</template>
+          </el-menu-item>
+
+          <el-menu-item index="/back/orders">
+            <el-icon><ShoppingBag/></el-icon>
+            <template #title>订单管理</template>
+          </el-menu-item>
 
           <el-sub-menu index="" v-if="account.role==='ROLE_ADMIN'">
             <template #title>
               <el-icon><UserFilled/></el-icon>
               <span>系统角色管理</span>
             </template>
-
-<!--            系统角色菜单-->
+            <!-- 系统角色菜单 -->
             <el-menu-item index="/back/admin">
               <el-icon><User/></el-icon>
               <template #title>管理员管理</template>
@@ -167,25 +169,23 @@ const handleUpdateAccountFail=()=>{
               <el-icon><User/></el-icon>
               <template #title>用户管理</template>
             </el-menu-item>
-
           </el-sub-menu>
-
         </el-menu>
       </aside>
-<!--      主要内容区域-->
+      <!-- 主要内容区域 -->
       <main class="admin-content">
         <router-view @update-account="handleUpdateAccount" @update-account-fail="handleUpdateAccountFail"></router-view>
       </main>
     </div>
 
-<!--    主题设置抽屉-->
+    <!-- 主题设置抽屉 -->
     <el-drawer v-model="drawer" title="系统设置" direction="rtl" size="300px">
       <div class="drawer-content">
-        <div class="drawer=section">
+        <div class="drawer-section">
           <h3>侧边栏设置</h3>
           <div class="drawer-option">
             <span>折叠侧边栏</span>
-            <el-switch v-model="isCollapse"active-color="var(--font-color-primary)" inactive-color="#dcdfe6"/>
+            <el-switch v-model="isCollapse" active-color="var(--font-color-primary)" inactive-color="#dcdfe6"/>
           </div>
         </div>
 
@@ -195,85 +195,84 @@ const handleUpdateAccountFail=()=>{
           <h3>主题设置</h3>
           <div class="theme-options">
             <div
-              v-for="(theme,index) in themes"
+              v-for="(theme, index) in themes"
               :key="index"
               class="theme-option"
-              :class="[theme,{active:themeStatus===index}]"
-              @click="changeTheme(index)">
+              :class="[theme, {active: themeStatus === index}]"
+              @click="changeTheme(index)"
+            >
               <div class="theme-color"></div>
-              <div class="theme-check" v-if="themeStatus===index">√</div>
+              <div class="theme-check" v-if="themeStatus === index">√</div>
             </div>
           </div>
         </div>
-
       </div>
     </el-drawer>
-
   </div>
 </template>
 
 <style lang="scss" scoped>
-.admin-layout{
+.admin-layout {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
 }
 
-.admin-header{
+.admin-header {
   height: 60px;
   background-color: var(--font-color-primary);
-  color:#ffffff;
+  color: #ffffff;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
   z-index: 1000;
 
-  .header-left{
+  .header-left {
     display: flex;
     align-items: center;
     padding: 0 10px;
 
-    .logo-container{
+    .logo-container {
       height: 60px;
       display: flex;
       align-items: center;
       justify-content: center;
 
-      .logo-image{
+      .logo-image {
         width: 30px;
         height: 30px;
         margin-right: 10px;
       }
 
-      .logo-text{
+      .logo-text {
         font-size: 18px;
         font-weight: 600;
-        color:#fff;
-        margin:0;
+        color: #fff;
+        margin: 0;
         white-space: nowrap;
       }
     }
   }
 
-  .header-right{
+  .header-right {
     display: flex;
     align-items: center;
     margin-right: 20px;
 
-    .user-info{
+    .user-info {
       display: flex;
       align-items: center;
-      cursor:pointer;
-      padding:5px 10px;
+      cursor: pointer;
+      padding: 5px 10px;
       border-radius: 4px;
 
-      &:hover{
-        background-color: rgba(255,255,255,0.1);
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.1);
       }
 
-      .user-avatar{
+      .user-avatar {
         width: 32px;
         height: 32px;
         border-radius: 50%;
@@ -281,84 +280,84 @@ const handleUpdateAccountFail=()=>{
         margin-right: 8px;
         background-color: #fff;
 
-        img{
+        img {
           width: 100%;
           height: 100%;
           object-fit: cover;
           outline: none !important;
         }
       }
-      .user-name{
-        font-size:14px;
+      .user-name {
+        font-size: 14px;
         color: #fff;
       }
     }
   }
 }
 
-.admin-container{
+.admin-container {
   display: flex;
   flex: 1;
-  gap:10px;
+  gap: 10px;
   padding: 10px;
   background-color: #f9f9f9;
 }
 
-.admin-sidebar{
+.admin-sidebar {
   min-height: calc(100vh - 80px);
   background-color: #fff;
-  box-shadow: 2px 0 8px 0 rgba(29,35,41,0.05);
+  box-shadow: 2px 0 8px 0 rgba(29, 35, 41, 0.05);
 }
 
-.admin-content{
+.admin-content {
   flex: 1;
   overflow: auto;
   background-color: #fff;
   border-radius: 5px;
 }
 
-.dropdown-link{
+.dropdown-link {
   display: flex;
   align-items: center;
-  color:inherit;
+  color: inherit;
   text-decoration: none;
 
-  .el-icon{
+  .el-icon {
     margin-right: 8px;
   }
 }
 
-.drawer-content{
+.drawer-content {
   padding: 20px;
 
-  .drawer-section{
+  .drawer-section {
     margin-bottom: 20px;
 
-    h3{
+    h3 {
       margin-top: 0;
       margin-bottom: 20px;
       font-size: 16px;
-      color:#333;
+      color: #333;
     }
-    .drawer-option{
-     display: flex;
+    .drawer-option {
+      display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 15px;
 
-      span{
-        font-size:14px;
-        color:#606266;
+      span {
+        font-size: 14px;
+        color: #606266;
       }
     }
   }
 
-  .theme-options{
+  .theme-options {
     display: flex;
     flex-wrap: wrap;
-    gap:15px;
+    gap: 15px;
 
-    .theme-option{
+    .theme-option {
       position: relative;
       width: 60px;
       height: 60px;
@@ -367,23 +366,23 @@ const handleUpdateAccountFail=()=>{
       display: flex;
       align-items: center;
       justify-content: center;
-      border:2px solid transparent;
+      border: 2px solid transparent;
 
-      &.active{
-        border-color:#333;
+      &.active {
+        border-color: #333;
       }
 
-      .theme-color{
+      .theme-color {
         width: 40px;
         height: 40px;
         border-radius: 4px;
         background-color: var(--font-color-primary);
       }
 
-      .theme-check{
+      .theme-check {
         position: absolute;
         bottom: 5px;
-        right:5px;
+        right: 5px;
         width: 16px;
         height: 16px;
         background-color: #fff;
@@ -392,7 +391,7 @@ const handleUpdateAccountFail=()=>{
         align-items: center;
         justify-content: center;
         font-size: 12px;
-        color:var(--font-color-primary);
+        color: var(--font-color-primary);
         font-weight: bold;
       }
     }

@@ -1,7 +1,7 @@
 <script setup>
 
 //表格数据
-import {reactive, ref,shallowRef, onMounted} from "vue";
+import {reactive, ref,shallowRef,onMounted} from "vue";
 import request from "@/utils/request.js";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {Delete, Edit, Plus, Search, UploadFilled} from "@element-plus/icons-vue";
@@ -75,16 +75,22 @@ const multipleSection=ref([])
 
 //加载数据
 const load=()=>{
-  request.get("/goods/page",{
+  request.get("/orders",{
     params:{
       pageNum:pageNum.value,
       pageSize:pageSize.value,
       keyword:searchForm.keyword,
     }
-  }).then(res=>{
+  }).then(res => {
+    console.log('res:', res)  // 调试用
+    if (res.code !== '200') {
+        ElMessage.error(res.message)
+        return
+    }
     if(res.data){
-      tableData.value=res.data.records
-      total.value=res.data.total
+        tableData.value = res.data
+        total.value = res.data.total
+        //console.log('加载订单数据:', tableData)  // 调试用
     }
   })
 }
@@ -101,13 +107,13 @@ const save=()=>{
   }
 
   form.value.content=htmlContent.value;
-  if(Array.isArray(form.value.place)){
-    form.value.place=form.value.place.join('/');
+  if(Array.isArray(form.value.address)){
+    form.value.address=form.value.address.join('/');
   }else{
     form.value.place=form.value.place || '';
   }
 
-  request.post("/goods",form.value).then(res=>{
+  request.post("/orders",form.value).then(res=>{
     if(res.code==='200'){
       ElMessage.success("保存成功")
       dialogFormVisible.value=false
@@ -122,7 +128,6 @@ const save=()=>{
 const handleAdd=(row)=>{
   form.value={}
   htmlContent.value='';
-  imgList.value=[];
 
   dialogFormVisible.value=true
 }
@@ -130,25 +135,19 @@ const handleAdd=(row)=>{
 //编辑
 const handleEdit=(row)=>{
   form.value=JSON.parse(JSON.stringify(row))
-  if(form.value.imgList){
-    imgList.value=form.value.imgList.split(',');
-
-  }else{
-    imgList.value=[];
-  }
 
   htmlContent.value=form.value.content||'';
-  if(form.value.place){
-    form.value.place=form.value.place.split('/');
+  if(form.value.address){
+    form.value.address=form.value.address.split('/');
   }else{
-    form.value.place=[];
+    form.value.address=[];
   }
   dialogFormVisible.value=true
 }
 
 //删除
 const del=(id)=>{
-  request.delete("/goods/"+id).then(res=>{
+  request.delete("/orders/"+id).then(res=>{
     if(res.code==='200'){
       ElMessage.success("删除成功")
       load()
@@ -165,7 +164,7 @@ const delBatch=()=>{
     return
   }
   const ids=multipleSection.value.map(v=>v.id)
-  request.post("/goods/del/batch",ids).then(res=>{
+  request.post("/orders/del/batch",ids).then(res=>{
     if(res.code=='200'){
       ElMessage.success("批量删除成功")
       load()
@@ -243,43 +242,35 @@ const  handleImgUploadFail=(error)=>{
   ElMessage.error('图片上传失败,请重试')
 };
 
-
-//多图列表
-const imgList = ref([])
-//多图片上传成功处理
-const handleImgListUploadSuccess=(res)=>{
-  imgList.value.push(res);
-};
-//多图片上传失败处理
-const handleImgListUploadFail=(error)=>{
-  ElMessage.error('图片上传失败,请重试')
-};
-
 //删除已上传的图片
 const removeImgList=(index)=>{
   imgList.value.splice(index,1);
 };
 
-//获取表格中显示的图片列表
-const getImageList=(imgString)=>{
-  if(!imgString)return [];
-  return imgString.split(',');
-
-};
-
-const getTypeName=(typeId)=>{
-  const type=types.value.find(item=>Number(item.id)===Number(typeId));
-  return type ? type.name : '';
-};
-
-const types=ref([])
-const loadType=()=>{
-  request.get('/type').then(res=>{
-    types.value=res.data;
+//加载商品
+const goods=ref([])
+const loadGoods=()=>{
+  request.get('/goods').then(res=>{
+    goods.value=res.data;
   })
 }
 
+//加载用户
+const users=ref([])
+const loadUser=()=>{
+  request.get('/user').then(res=>{
+    users.value=res.data;
+  })
+}
+const getUserNickname=(userId)=>{
+  const user=users.value.find(item=>Number(item.id)===Number(userId));
+  return user ? user.nickname : '';
+};
 
+//设置评分
+const setScore = (score) => { 
+    return score ? score : '0';
+}
 
 //定义富文本数据
 const contentViewVisible=ref(false)
@@ -290,23 +281,23 @@ const viewContent=(content)=>{
   contentViewVisible.value=true
 }
 
-const users=ref([])
-const loadUser=()=>{
-  request.get('/user').then(res=>{
-    users.value=res.data;
-  })
+
+// 选中回调：val = 当前选中的 商品id
+const handleSelect = (val) => {
+  //根据id在商品列表中找到对应商品
+  const target = goods.value.find( item => item.id === val )
+  if (target) {
+    form.value.itemId = target.id    // 赋值ID
+    form.value.itemName = target.name// 赋值名称
+  }
 }
 
 
-const getUserNickname=(userId)=>{
-  const user=users.value.find(item=>Number(item.id)===Number(userId));
-  return user ? user.nickname : '';
-};
 
 onMounted(() => { 
-  load()
-  loadType()
-  loadUser()
+    load()
+    loadGoods()
+    loadUser()
 })
 
 </script>
@@ -330,68 +321,50 @@ onMounted(() => {
     <el-card>
       <el-table :data="tableData" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="60" align="center"/>
+
         <el-table-column prop="id" label="ID" width="80" align="center"/>
-        <el-table-column prop="name" label="商品名称"/>
+        <el-table-column prop="no" label="订单号" width="300" align="center"/>
+        <el-table-column prop="itemName" label="商品名称"/>
 
-        <el-table-column label="图片" width="120" align="center">
+        <el-table-column label="商品图片" width="120" align="center">
           <template #default="scope">
-            <el-image 
-              style="width: 80px; height: 80px" 
-              :src="scope.row.img" 
-              :preview-src-list="[scope.row.img]" 
-              :preview-teleported="true">
-            </el-image>
+                <el-image 
+                style="width: 80px; height: 80px" 
+                :src="scope.row.itemImg" 
+                :preview-src-list="[scope.row.itemImg]" 
+                :preview-teleported="true">
+                </el-image>
           </template>
         </el-table-column>
 
-        <el-table-column label="多张图片" width="120" align="center">
+        <el-table-column label="卖家">
           <template #default="scope">
-            <el-image
-                style="width: 80px; height: 80px" :src="getImageList(scope.row.imgList)[0]" :preview-src-list="getImageList(scope.row.imgList)" :preview-teleported="true">
-            </el-image>
+            <span>{{getUserNickname(scope.row.fromId)}}</span>
           </template>
         </el-table-column>
-
-        <el-table-column label="分类">
-        <template #default="scope">
-          <span>{{getTypeName(scope.row.typeId)}}</span>
-        </template>
+        <el-table-column label="买家">
+          <template #default="scope">
+            <span>{{getUserNickname(scope.row.toId)}}</span>
+          </template>
         </el-table-column>
-
-        <el-table-column prop="price" label="售价"/>
-        <el-table-column prop="rePrice" label="原价"/>
-
-        <el-table-column prop="num" label="浏览量"/>
-
+        <el-table-column prop="price" label="价格"/>
+        <el-table-column prop="time" label="下单时间"/>
         <el-table-column prop="status" label="状态"/>
-
-        <el-table-column label="详情" width="80">
-          <template #default="scope">
-            <el-button type="primary" @click="viewContent(scope.row.content)">查看</el-button>
-          </template>
+        <el-table-column label="买家评分" width="120" align="center">
+            <template #default="scope">
+                <el-rate 
+                    v-model="scope.row.toRate" 
+                    disabled 
+                    show-score 
+                    text-color="#ff9900"
+                />
+            </template>
         </el-table-column>
-
-        <el-table-column prop="place" label="所在地"/>、
-
-        <el-table-column label="发货设置">
-          <template #default="scope">
-            <el-tag type="primary">{{scope.row.shipment}}</el-tag>
-          </template>
-        </el-table-column>
-
-        <el-table-column label="用户">
-          <template #default="scope">
-            <span>{{getUserNickname(scope.row.userId)}}</span>
-          </template>
-        </el-table-column>
-
-        <el-table-column label="成色">
-          <template #default="scope">
-            <el-tag type="primary">{{scope.row.quality}}</el-tag>
-          </template>
-        </el-table-column>
-
-        <el-table-column prop="date" label="发布日期"/>、
+        <el-table-column prop="toReview" label="买家评价"/>
+        <el-table-column prop="address" label="省市区"/>
+        <el-table-column prop="info" label="详细地址"/>
+        <el-table-column prop="name" label="收货人姓名"/>
+        <el-table-column prop="phone" label="收货人联系方式"/>
 
         <el-table-column label="操作" width="120" align="center" fixed="right">
           <template #default="scope">
@@ -419,119 +392,84 @@ onMounted(() => {
     </el-card>
 
 <!--    表单对话框-->
-    <el-dialog v-model="dialogFormVisible" :title="form.id ? '编辑' : '新增'" width="30%" destroy-on-close center>
-      <el-form  :model="form" label-width="100px">
-
-
-          <el-form-item label="商品名称"required>
-            <el-input v-model="form.name" placeholder="请输入"/>
-          </el-form-item>
-
-          <el-form-item label="图片上传">
-            <div class="upload-container">
-              <el-avatar v-if="form.img" :src="form.img" :size="80" />
-              <el-upload :action="`${serverHost}/web/upload`" :on-success="handleImgUploadSuccess":on-error="handleImgUploadFail" :show-file-list="false">
-                <el-button type="primary" :icon="UploadFilled">{{ form.img ? '更换图片' : '上传图片' }}</el-button>
-              </el-upload>
-            </div>
-          </el-form-item>
-
-<!--        多图组件上传-->
-        <el-form-item label="多张图片">
-          <div class="upload-container">
-            <div class="image-list" v-if="imgList.length> 0">
-              <div v-for="(img,index) in imgList":key="index" class="image-item">
-                <el-avatar :src="img" :size="80"/>
-                <el-button type="danger" circle:icon="Delete" class="delete-btn"@click="removeImgList(index)"></el-button>
-              </div>
-            </div>
-            <el-upload :action="`${serverHost}/web/upload`" :on-success="handleImgListUploadSuccess":on-error="handleImgListUploadFail" :show-file-list="false" multiple>
-              <el-button type="primary":icon="UploadFilled">上传图片</el-button>
-            </el-upload>
-
-          </div>
+    <el-dialog v-model="dialogFormVisible" :title="form.id ? '编辑' : '新增'" width="50%" destroy-on-close center>
+      <el-form  :model="form" label-width="120px" padding="20px">
+        <el-form-item label="订单号"required>
+            <el-input v-model="form.no" placeholder="请输入"/>
         </el-form-item>
-        <el-form-item label="分类"required>
-          <el-select v-model="form.typeId" placeholder="Select" style="width: 240px">
+
+        <el-form-item label="商品"required>
+          <el-select v-model="form.itemName" :placeholder="请选择" style="width: 240px" @change="handleSelect">
             <el-option
-                v-for="item in types"
+                v-for="item in goods"
                 :key="item.id"
                 :label="item.name"
-                :value="item.id"
-          />
+                :value="item.id"/>
           </el-select >
         </el-form-item>
 
-        <el-form-item label="售价"required>
+        <el-form-item label="卖家"required>
+          <el-select v-model="form.fromId" :placeholder="请选择" style="width: 240px" @change="handleSelect">
+            <el-option
+                v-for="item in users"
+                :key="item.id"
+                :label="item.nickname"
+                :value="item.id"/>
+          </el-select >
+        </el-form-item>
+
+        <el-form-item label="买家"required>
+          <el-select v-model="form.toId" :placeholder="请选择" style="width: 240px" @change="handleSelect">
+            <el-option
+                v-for="item in users"
+                :key="item.id"
+                :label="item.nickname"
+                :value="item.id"/>
+          </el-select >
+        </el-form-item>
+
+        <el-form-item label="价格"required>
           <el-input v-model="form.price" type="number" placeholder="请输入"/>
         </el-form-item>
-        <el-form-item label="原价"required>
-          <el-input v-model="form.rePrice" type="number" placeholder="请输入"/>
+
+        <el-form-item label="支付时间"required>
+          <el-date-picker
+              v-model="form.time"
+              type="datetime"
+              placeholder="选择日期时间"
+              style="width: 240px"
+          />
         </el-form-item>
 
-<!--        富文本编辑-->
-        <el-form-item label="详情">
-          <div style="border:1px solid #ccc;z-index:100">
-            <Toolbar style="border-bottom:1px solid #ccc" :editor="editorRefContent" :default-config="editorConfig" mode="default"/>
-            <Editor style="height:300px; overflow-y: hidden;" v-model="htmlContent" :default-config="editorConfig" mode="default" @onCreated="editorRefContent=$event"/>
-          </div>
+        <el-form-item label="买家评分">
+          <el-rate v-model="form.toRate" show-score text-color="#ff9900"/>
         </el-form-item>
 
-        <el-form-item label="所在城市">
+        <el-form-item label="买家评价"required>
+          <el-input v-model="form.toReview" type="textarea" placeholder="请输入"/>
+        </el-form-item>
+
+        <el-form-item label="省市区"required>
           <el-cascader
-            v-model="form.place"
+            v-model="form.address"
             :options="regionData"
             :props="{value:'label'}"
-            placeholder="请选择省市区"
+            placeholder="请选择"
             clearable
             style="width:100%">
           </el-cascader>
         </el-form-item>
-
-
-
-        <el-form-item label="发货设置">
-          <el-radio-group v-model="form.shipment">
-            <el-radio value="包邮">包邮</el-radio>
-            <el-radio value="不包邮">不包邮</el-radio>
-          </el-radio-group>
+        
+        <el-form-item label="详细地址"required> 
+            <el-input v-model="form.info" type="textarea" placeholder="请输入"/>
         </el-form-item>
 
-        <el-form-item label="售价"required>
-          <el-input v-model="form.price" type="number" placeholder="请输入"/>
+        <el-form-item label="收货人姓名"required> 
+            <el-input v-model="form.name" type="text" placeholder="请输入"/>
         </el-form-item>
 
-        <el-form-item label="用户" required>
-          <el-select v-model="form.userId" placeholder="Select" style="width: 240px">
-            <el-option
-              v-for="item in users"
-              :key="item.id"
-              :label="item.nickname"
-              :value="item.id"
-              />
-          </el-select>
-        </el-form-item>
-
-        <el-form-item label="浏览量"required>
-          <el-input v-model="form.num" type="number" placeholder="请输入"/>
-        </el-form-item>
-
-        <el-form-item label="状态"required>
-          <el-input v-model="form.status" placeholder="请输入"/>
-        </el-form-item>
-
-        <el-form-item label="成色">
-          <el-radio-group v-model="form.quality">
-            <el-radio value="全新">全新</el-radio>
-            <el-radio value="九成新">九成新</el-radio>
-            <el-radio value="八成新">八成新</el-radio>
-            <el-radio value="七成新">七成新</el-radio>
-            <el-radio value="六成新及以下">六成新及以下</el-radio>
-          </el-radio-group>
-        </el-form-item>
-
-        <el-form-item label="日期">
-          <el-date-picker v-model="form.date" type="date" value-format="YYYY-MM-DD" placeholder="选择日期"></el-date-picker>
+        <el-form-item label="收货人联系方式"required> 
+            <el-input v-model="form.phone" type="text" placeholder="请输入"/>
         </el-form-item>
 
       </el-form>

@@ -228,6 +228,14 @@ const routes = [
           title: '收货地址管理'
         }
       },
+      {
+        path: 'orders',
+        name: 'BackOrders',
+        component: () => import('../views/back/Orders.vue'),
+        meta: {
+          title: '订单管理'
+        }
+      }
 
     ]
   }
