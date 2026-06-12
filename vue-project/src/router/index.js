@@ -139,6 +139,14 @@ const routes = [
           title: '收货地址'
         }
       },
+      {
+        path: 'orders',
+        name: 'FrontOrders',
+        component: () => import('../views/front/Orders.vue'),
+        meta: {
+          title: '我的订单'
+        }
+      },
     ]
   },
   //下面都是后台路由

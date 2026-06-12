@@ -47,12 +47,20 @@ public class OrdersController {
             orders.setPrice(goods.getPrice());
             orders.setTime(DateUtil.now());
             orders.setStatus("待支付");
-            Address address = addressService.getById(orders.getAddressId());
-            orders.setAddress(address.getAddress());
-            orders.setInfo(address.getInfo());
-            orders.setName(address.getName());
-            orders.setPhone(address.getPhone());
-
+            if (orders.getAddressId() == null) {
+                orders.setAddress(orders.getAddress());
+                orders.setInfo(orders.getInfo());
+                orders.setName(orders.getName());
+                orders.setPhone(orders.getPhone());
+            }
+            else {
+                Address address = addressService.getById(orders.getAddressId());
+                orders.setAddress(address.getAddress());
+                orders.setInfo(address.getInfo());
+                orders.setName(address.getName());
+                orders.setPhone(address.getPhone());
+            }
+            
             goods.setStatus("已售出");//java层面修改
             goodsService.updateById(goods);//更新到数据库
 

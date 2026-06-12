@@ -5,54 +5,14 @@ import {reactive, ref,shallowRef,onMounted} from "vue";
 import request from "@/utils/request.js";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {Delete, Edit, Plus, Search, UploadFilled} from "@element-plus/icons-vue";
-import {serverHost} from "../../../config/config.default.js";
 
 
 //引入富文本组件
 import '@wangeditor/editor/dist/css/style.css'
-import { Editor,Toolbar } from '@wangeditor/editor-for-vue'
 
 import axios from "axios"
 import {regionData} from "element-china-area-data";
 
-
-//定义富文本数据
-const htmlContent=ref('')
-const editorRefContent=shallowRef();
-
-//富文本自定义上传方法
-const customUpload=(file,insertFn)=>{
-  const formData=new FormData()
-  formData.append('file',file)
-  axios({
-    url:`${serverHost}/web/upload`,
-    method:'post',
-    data:formData,
-    headers:{'Content-Type':'multipart/form-data'}
-  }).then(res=>{
-    insertFn(res.data)
-  }).catch((error)=>{
-    console.log('上传失败:',error)
-    ElMessage.error('上传失败')
-  })
-}
-
-//wangEditor配置
-const editorConfig={
-  placeholder:'请输入内容...',
-  MENU_CONF:{
-    uploadImage:{
-      customUpload:async (file,insertFn)=>{
-        customUpload(file,insertFn)
-      },
-    },
-    uploadVideo:{
-      customUpload:async(file,insertFn)=>{
-        customUpload(file,insertFn)
-      },
-    },
-  }
-}
 
 //表格数据
 const tableData=ref([])
@@ -75,7 +35,7 @@ const multipleSection=ref([])
 
 //加载数据
 const load=()=>{
-  request.get("/orders",{
+  request.get("/orders/page",{
     params:{
       pageNum:pageNum.value,
       pageSize:pageSize.value,
@@ -88,7 +48,7 @@ const load=()=>{
         return
     }
     if(res.data){
-        tableData.value = res.data
+        tableData.value = res.data.records
         total.value = res.data.total
         //console.log('加载订单数据:', tableData)  // 调试用
     }
@@ -98,20 +58,15 @@ const load=()=>{
 
 //保存
 const save=()=>{
-
-  if(imgList.value.length>0){
-    form.value.imgList=imgList.value.join(',');
-
-  }else{
-    form.value.imgList='';
-  }
-
-  form.value.content=htmlContent.value;
   if(Array.isArray(form.value.address)){
     form.value.address=form.value.address.join('/');
-  }else{
-    form.value.place=form.value.place || '';
+    console.log('存在地址:', form.value.address)
   }
+  else{
+    console.log('不存在地址:', form.value.address)
+    form.value.address = form.value.address || '';
+  }
+  console.log('保存数据:', form)
 
   request.post("/orders",form.value).then(res=>{
     if(res.code==='200'){
@@ -127,8 +82,6 @@ const save=()=>{
 //添加
 const handleAdd=(row)=>{
   form.value={}
-  htmlContent.value='';
-
   dialogFormVisible.value=true
 }
 
@@ -136,7 +89,6 @@ const handleAdd=(row)=>{
 const handleEdit=(row)=>{
   form.value=JSON.parse(JSON.stringify(row))
 
-  htmlContent.value=form.value.content||'';
   if(form.value.address){
     form.value.address=form.value.address.split('/');
   }else{
@@ -216,7 +168,7 @@ const confirmDelete=(id)=>{
 //确认批量删除
 const confirmBatchDelete=()=>{
   if(multipleSection.value.length===0){
-    ElMessageBox.warning("请至少选择一条记录")
+    ElMessage.warning("请至少选择一条记录")
     return
   }
   ElMessageBox.confirm(
@@ -232,20 +184,6 @@ const confirmBatchDelete=()=>{
         delBatch()
       })
 }
-
-//图片上传成功处理
-const  handleImgUploadSuccess=(res)=>{
-  form.value.img=res
-};
-//图片上传失败处理
-const  handleImgUploadFail=(error)=>{
-  ElMessage.error('图片上传失败,请重试')
-};
-
-//删除已上传的图片
-const removeImgList=(index)=>{
-  imgList.value.splice(index,1);
-};
 
 //加载商品
 const goods=ref([])
@@ -267,21 +205,6 @@ const getUserNickname=(userId)=>{
   return user ? user.nickname : '';
 };
 
-//设置评分
-const setScore = (score) => { 
-    return score ? score : '0';
-}
-
-//定义富文本数据
-const contentViewVisible=ref(false)
-const currentViewContent=ref('')
-
-const viewContent=(content)=>{
-  currentViewContent.value=content||''
-  contentViewVisible.value=true
-}
-
-
 // 选中回调：val = 当前选中的 商品id
 const handleSelect = (val) => {
   //根据id在商品列表中找到对应商品
@@ -291,8 +214,6 @@ const handleSelect = (val) => {
     form.value.itemName = target.name// 赋值名称
   }
 }
-
-
 
 onMounted(() => { 
     load()
@@ -306,7 +227,7 @@ onMounted(() => {
 
 <!--    搜索区域-->
     <div class="header-section">
-      <el-input v-model="searchForm.keyword"placeholder="请输入昵称" clear="filter-input":prefix-icon="Search" clearable/>
+      <el-input v-model="searchForm.keyword"placeholder="请输入订单号" clear="filter-input":prefix-icon="Search" clearable/>
       <el-button class="ml-10" plain type="primary"@click="load">搜索</el-button>
       <el-button plain type="info" @click="reset">重置</el-button>
     </div>
@@ -393,13 +314,13 @@ onMounted(() => {
 
 <!--    表单对话框-->
     <el-dialog v-model="dialogFormVisible" :title="form.id ? '编辑' : '新增'" width="50%" destroy-on-close center>
-      <el-form  :model="form" label-width="120px" padding="20px">
+      <el-form  :model="form" label-width="120px">
         <el-form-item label="订单号"required>
-            <el-input v-model="form.no" placeholder="请输入"/>
+            <el-input v-model="form.no" placeholder="请输入" style="width: 240px"/>
         </el-form-item>
 
         <el-form-item label="商品"required>
-          <el-select v-model="form.itemName" :placeholder="请选择" style="width: 240px" @change="handleSelect">
+          <el-select v-model="form.itemName" placeholder="请选择" style="width: 240px" @change="handleSelect">
             <el-option
                 v-for="item in goods"
                 :key="item.id"
@@ -409,7 +330,7 @@ onMounted(() => {
         </el-form-item>
 
         <el-form-item label="卖家"required>
-          <el-select v-model="form.fromId" :placeholder="请选择" style="width: 240px" @change="handleSelect">
+          <el-select v-model="form.fromId" placeholder="请选择" style="width: 240px" @change="handleSelect">
             <el-option
                 v-for="item in users"
                 :key="item.id"
@@ -419,7 +340,7 @@ onMounted(() => {
         </el-form-item>
 
         <el-form-item label="买家"required>
-          <el-select v-model="form.toId" :placeholder="请选择" style="width: 240px" @change="handleSelect">
+          <el-select v-model="form.toId" placeholder="请选择" style="width: 240px" @change="handleSelect">
             <el-option
                 v-for="item in users"
                 :key="item.id"
@@ -429,7 +350,7 @@ onMounted(() => {
         </el-form-item>
 
         <el-form-item label="价格"required>
-          <el-input v-model="form.price" type="number" placeholder="请输入"/>
+          <el-input v-model="form.price" type="number" placeholder="请输入" style="width: 240px"/>
         </el-form-item>
 
         <el-form-item label="支付时间"required>
@@ -482,22 +403,11 @@ onMounted(() => {
         </div>
       </template>
     </el-dialog>
-<!-- 表单中的展示-->
-    <el-dialog v-model="contentViewVisible" title="详情" width="40%" center>
-      <div v-html="currentViewContent"></div>
-    </el-dialog>
-
-
   </div>
 </template>
 
 <style scoped>
-.image-list{
-  display: flex;
-  flex-wrap: wrap;
-  gap:10px;
-  margin-bottom: 10px;
-}
+
 .image-item{
   position: relative;
 }

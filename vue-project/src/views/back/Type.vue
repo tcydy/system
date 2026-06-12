@@ -135,7 +135,7 @@ const confirmDelete=(id)=>{
 //确认批量删除
 const confirmBatchDelete=()=>{
   if(multipleSection.value.length===0){
-    ElMessageBox.warning("请至少选择一条记录")
+    ElMessage.warning("请至少选择一条记录")
     return
   }
   ElMessageBox.confirm(
@@ -181,7 +181,7 @@ const changeState = (row) =>{
 
 <!--    搜索区域-->
     <div class="header-section">
-      <el-input v-model="searchForm.keyword"placeholder="请输入昵称" clear="filter-input":prefix-icon="Search" clearable/>
+      <el-input v-model="searchForm.keyword"placeholder="请输入标题" clear="filter-input":prefix-icon="Search" clearable/>
       <el-button class="ml-10" plain type="primary"@click="load">搜索</el-button>
       <el-button plain type="info" @click="reset">重置</el-button>
     </div>
