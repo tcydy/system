@@ -224,82 +224,83 @@ onMounted(() => {
 </script>
 <template>
   <div class="content-container">
-
-<!--    搜索区域-->
+    <!--搜索区域-->
     <div class="header-section">
-      <el-input v-model="searchForm.keyword"placeholder="请输入订单号" clear="filter-input":prefix-icon="Search" clearable/>
-      <el-button class="ml-10" plain type="primary"@click="load">搜索</el-button>
+      <el-input v-model="searchForm.keyword" placeholder="请输入订单号" clear="filter-input" :prefix-icon="Search" clearable />
+      <el-button class="ml-10" plain type="primary" @click="load">搜索</el-button>
       <el-button plain type="info" @click="reset">重置</el-button>
     </div>
 
-<!--    操作按钮区域-->
+    <!--操作按钮区域-->
     <div class="toolbar-section">
-      <el-button plain type="primary"@click="handleAdd":icon="Plus">新增</el-button>
-      <el-button plain type="danger"@click="confirmBatchDelete":icon="Delete">批量删除</el-button>
+      <el-button plain type="primary" @click="handleAdd" :icon="Plus">新增</el-button>
+      <el-button plain type="danger" @click="confirmBatchDelete" :icon="Delete">批量删除</el-button>
     </div>
 
-<!--    表格区域-->
+    <!--表格区域-->
     <el-card>
       <el-table :data="tableData" @selection-change="handleSelectionChange">
-        <el-table-column type="selection" width="60" align="center"/>
+        <el-table-column type="selection" width="60" align="center" />
 
-        <el-table-column prop="id" label="ID" width="80" align="center"/>
-        <el-table-column prop="no" label="订单号" width="300" align="center"/>
-        <el-table-column prop="itemName" label="商品名称"/>
+        <el-table-column prop="id" label="ID" width="80" align="center" />
+        <el-table-column prop="no" label="订单号" width="300" align="center" />
+        <el-table-column prop="itemName" label="商品名称" />
 
         <el-table-column label="商品图片" width="120" align="center">
           <template #default="scope">
-                <el-image 
-                style="width: 80px; height: 80px" 
-                :src="scope.row.itemImg" 
-                :preview-src-list="[scope.row.itemImg]" 
-                :preview-teleported="true">
-                </el-image>
+            <el-image
+              style="width: 80px; height: 80px"
+              :src="scope.row.itemImg"
+              :preview-src-list="[scope.row.itemImg]"
+              :preview-teleported="true"
+            ></el-image>
           </template>
         </el-table-column>
 
         <el-table-column label="卖家">
           <template #default="scope">
-            <span>{{getUserNickname(scope.row.fromId)}}</span>
+            <span>{{ getUserNickname(scope.row.fromId) }}</span>
           </template>
         </el-table-column>
         <el-table-column label="买家">
           <template #default="scope">
-            <span>{{getUserNickname(scope.row.toId)}}</span>
+            <span>{{ getUserNickname(scope.row.toId) }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="price" label="价格"/>
-        <el-table-column prop="time" label="下单时间"/>
-        <el-table-column prop="status" label="状态"/>
+        <el-table-column prop="price" label="价格" />
+        <el-table-column prop="time" label="下单时间" />
+        <el-table-column prop="status" label="状态" />
+
         <el-table-column label="买家评分" width="120" align="center">
-            <template #default="scope">
-                <el-rate 
-                    v-model="scope.row.toRate" 
-                    disabled 
-                    show-score 
-                    text-color="#ff9900"
-                />
-            </template>
+          <template #default="scope">
+            <el-rate
+              v-model="scope.row.toRate"
+              disabled
+              show-score
+              text-color="#ff9900"
+            />
+          </template>
         </el-table-column>
-        <el-table-column prop="toReview" label="买家评价"/>
-        <el-table-column prop="address" label="省市区"/>
-        <el-table-column prop="info" label="详细地址"/>
-        <el-table-column prop="name" label="收货人姓名"/>
-        <el-table-column prop="phone" label="收货人联系方式"/>
+
+        <el-table-column prop="toReview" label="买家评价" />
+        <el-table-column prop="address" label="省市区" />
+        <el-table-column prop="info" label="详细地址" />
+        <el-table-column prop="name" label="收货人姓名" />
+        <el-table-column prop="phone" label="收货人联系方式" />
 
         <el-table-column label="操作" width="120" align="center" fixed="right">
           <template #default="scope">
             <el-tooltip content="编辑" placement="top" :effect="'light'">
-              <el-button circle type="primary" :icon="Edit" @click="handleEdit(scope.row)"/>
+              <el-button circle type="primary" :icon="Edit" @click="handleEdit(scope.row)" />
             </el-tooltip>
             <el-tooltip content="删除" placement="top" :effect="'light'">
-              <el-button circle type="danger" :icon="Delete" @click="confirmDelete(scope.row.id)"/>
+              <el-button circle type="danger" :icon="Delete" @click="confirmDelete(scope.row.id)" />
             </el-tooltip>
           </template>
         </el-table-column>
       </el-table>
 
-<!--      分页区域-->
+      <!--分页区域-->
       <div class="pagination-section">
         <el-pagination
           v-model:current-page="pageNum"
@@ -308,97 +309,105 @@ onMounted(() => {
           layout="total,sizes,prev,pager,next,jumper"
           :total="total"
           @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"/>
+          @current-change="handleCurrentChange"
+        />
       </div>
     </el-card>
 
-<!--    表单对话框-->
-    <el-dialog v-model="dialogFormVisible" :title="form.id ? '编辑' : '新增'" width="50%" destroy-on-close center>
-      <el-form  :model="form" label-width="120px">
-        <el-form-item label="订单号"required>
-            <el-input v-model="form.no" placeholder="请输入" style="width: 240px"/>
+    <!--表单对话框-->
+    <el-dialog
+      v-model="dialogFormVisible"
+      :title="form.id ? '编辑' : '新增'"
+      width="50%"
+      destroy-on-close
+      center
+    >
+      <el-form :model="form" label-width="120px">
+        <el-form-item label="订单号" required>
+          <el-input v-model="form.no" placeholder="请输入" style="width: 240px" />
         </el-form-item>
 
-        <el-form-item label="商品"required>
+        <el-form-item label="商品" required>
           <el-select v-model="form.itemName" placeholder="请选择" style="width: 240px" @change="handleSelect">
             <el-option
-                v-for="item in goods"
-                :key="item.id"
-                :label="item.name"
-                :value="item.id"/>
-          </el-select >
+              v-for="item in goods"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
         </el-form-item>
 
-        <el-form-item label="卖家"required>
+        <el-form-item label="卖家" required>
           <el-select v-model="form.fromId" placeholder="请选择" style="width: 240px" @change="handleSelect">
             <el-option
-                v-for="item in users"
-                :key="item.id"
-                :label="item.nickname"
-                :value="item.id"/>
-          </el-select >
+              v-for="item in users"
+              :key="item.id"
+              :label="item.nickname"
+              :value="item.id"
+            />
+          </el-select>
         </el-form-item>
 
-        <el-form-item label="买家"required>
+        <el-form-item label="买家" required>
           <el-select v-model="form.toId" placeholder="请选择" style="width: 240px" @change="handleSelect">
             <el-option
-                v-for="item in users"
-                :key="item.id"
-                :label="item.nickname"
-                :value="item.id"/>
-          </el-select >
+              v-for="item in users"
+              :key="item.id"
+              :label="item.nickname"
+              :value="item.id"
+            />
+          </el-select>
         </el-form-item>
 
-        <el-form-item label="价格"required>
-          <el-input v-model="form.price" type="number" placeholder="请输入" style="width: 240px"/>
+        <el-form-item label="价格" required>
+          <el-input v-model="form.price" type="number" placeholder="请输入" style="width: 240px" />
         </el-form-item>
 
-        <el-form-item label="支付时间"required>
+        <el-form-item label="支付时间" required>
           <el-date-picker
-              v-model="form.time"
-              type="datetime"
-              placeholder="选择日期时间"
-              style="width: 240px"
+            v-model="form.time"
+            type="datetime"
+            placeholder="选择日期时间"
+            style="width: 240px"
           />
         </el-form-item>
 
         <el-form-item label="买家评分">
-          <el-rate v-model="form.toRate" show-score text-color="#ff9900"/>
+          <el-rate v-model="form.toRate" show-score text-color="#ff9900" />
         </el-form-item>
 
-        <el-form-item label="买家评价"required>
-          <el-input v-model="form.toReview" type="textarea" placeholder="请输入"/>
+        <el-form-item label="买家评价" required>
+          <el-input v-model="form.toReview" type="textarea" placeholder="请输入" />
         </el-form-item>
 
-        <el-form-item label="省市区"required>
+        <el-form-item label="省市区" required>
           <el-cascader
             v-model="form.address"
             :options="regionData"
             :props="{value:'label'}"
             placeholder="请选择"
             clearable
-            style="width:100%">
-          </el-cascader>
-        </el-form-item>
-        
-        <el-form-item label="详细地址"required> 
-            <el-input v-model="form.info" type="textarea" placeholder="请输入"/>
+            style="width:100%"
+          />
         </el-form-item>
 
-        <el-form-item label="收货人姓名"required> 
-            <el-input v-model="form.name" type="text" placeholder="请输入"/>
+        <el-form-item label="详细地址" required>
+          <el-input v-model="form.info" type="textarea" placeholder="请输入" />
         </el-form-item>
 
-        <el-form-item label="收货人联系方式"required> 
-            <el-input v-model="form.phone" type="text" placeholder="请输入"/>
+        <el-form-item label="收货人姓名" required>
+          <el-input v-model="form.name" type="text" placeholder="请输入" />
         </el-form-item>
 
+        <el-form-item label="收货人联系方式" required>
+          <el-input v-model="form.phone" type="text" placeholder="请输入" />
+        </el-form-item>
       </el-form>
-
 
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="dialogFormVisible=false">取消</el-button>
+          <el-button @click="dialogFormVisible = false">取消</el-button>
           <el-button type="primary" @click="save">确定</el-button>
         </div>
       </template>

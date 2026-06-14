@@ -6,8 +6,9 @@
 import {useRoute, useRouter} from "vue-router";
 import {projectName} from "../../config/config.default.js";
 import {ElMessage} from "element-plus"
-import { User, Lock, SwitchButton, Search, Plus, ChatDotRound, Document, Star } from '@element-plus/icons-vue';
-import {computed, ref} from "vue";
+import { User, Lock, SwitchButton, Search, Plus, ChatDotRound, Document, Star,House } from '@element-plus/icons-vue';
+import { computed, ref } from "vue";
+import request from '@/utils/request.js';
 import Type from "@/views/back/Type.vue";
 
 const router=useRouter();
@@ -39,6 +40,22 @@ const keyword=ref('')
 const toSearch=()=>{
   router.push('/front/search?typeId=0&keyword='+keyword.value)
 }
+
+const my = ref([])
+const getAccount=()=>{
+  request.get('/web/userInfo').then(res => {
+    if(res.code==='200'&&res.data){
+      my.value=res.data
+      console.log(res.data)
+      console.log(my.value)
+    }else{
+      ElMessage.error(res.msg)
+    }
+  })
+}
+getAccount()
+
+
 </script>
 
 <template>
@@ -75,7 +92,7 @@ const toSearch=()=>{
             <el-button @click="router.push('/register')">注册</el-button>
           </div>
         </template>
-  <!--      一登录状态显示用户头像和下拉菜单-->
+        <!--一登录状态显示用户头像和下拉菜单-->
         <el-dropdown v-else class="custom-dropdown">
           <div class="user-avatar avatar-with-border">
             <img :src="account.avatarUrl || 'https://via.placeholder.com/40'" alt="avatar"/>
@@ -153,7 +170,7 @@ const toSearch=()=>{
         </div>
       </div>
 
-      <div style="width: 58px;height: 58px;border-bottom:none;padding: 0"class="side-bar-item" :class="{'is-active':route.path==='/front/user'}" @click="router.push('/front/user')">
+      <div style="width: 58px;height: 58px;border-bottom:none;padding: 0"class="side-bar-item" :class="{'is-active':route.path==='/front/user'}" @click="router.push('/front/user?id='+my.id)">
         <div style="display: flex;justify-content: center;font-size: 20px">
           <el-icon><User/></el-icon>
         </div>
@@ -214,8 +231,6 @@ $front-font-color: #151111;
   display: flex;
   flex-direction: column;
 }
-
-
 .header-nav{
   z-index: 1800;
   position: sticky;
@@ -320,12 +335,14 @@ $front-font-color: #151111;
 .main-content{
   flex:1;
   background-color: #fff;
+  padding-bottom: 50px;
 }
+
 .front-footer{
   padding: 16px 24px;
   text-align: center;
   background-color: #fff;
-  color:#666;
+  color: #666;
   font-size: 12px;
   border-top: 1px solid #eee;
 }
@@ -370,4 +387,5 @@ $front-font-color: #151111;
     }
   }
 }
+
 </style>

@@ -72,9 +72,16 @@ public class GoodsController {
     public Result findAll() {
         LambdaQueryWrapper<Goods> goodsLambdaQueryWrapper = new LambdaQueryWrapper<>();
         goodsLambdaQueryWrapper.orderByDesc(Goods::getNum);
-        goodsLambdaQueryWrapper.eq(Goods::getStatus,"上架" );
-        List<Goods> goodsList= goodsService.list(goodsLambdaQueryWrapper);
+        goodsLambdaQueryWrapper.eq(Goods::getStatus, "上架");
+        List<Goods> goodsList = goodsService.list(goodsLambdaQueryWrapper);
         return Result.success(goodsList);
+    }
+    
+    @GetMapping("/user/{id}")
+    public Result user(@PathVariable Integer id) {
+        LambdaQueryWrapper<Goods> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Goods::getUserId,id);
+        return Result.success(goodsService.list(wrapper));
     }
 
 
@@ -112,6 +119,7 @@ public class GoodsController {
         if (typeId != 0) {
             queryWrapper.eq(Goods::getTypeId, typeId);
         }
+        queryWrapper.eq(Goods::getStatus,"上架");
 
         if(StrUtil.isNotBlank(keyword)){
             queryWrapper.like(Goods::getName,keyword);

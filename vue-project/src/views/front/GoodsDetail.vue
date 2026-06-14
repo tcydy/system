@@ -1,7 +1,7 @@
 <script setup>
 import {useRoute,useRouter} from "vue-router";
 import request from "@/utils/request.js"
-import {ref} from 'vue'
+import {ref,onMounted} from 'vue'
 import {Star,StarFilled} from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus'
 import 'element-plus/dist/index.css'
@@ -20,19 +20,17 @@ const goods = ref({})
 const loadGoods = ()=>{
     request.get('/goods/'+id.value).then(res=>{
         goods.value=res.data
-
         img.value = goods.value.img
-
-        imgList.value = goods.value.imgList.split(',')
-        imgList.value.unshift(goods.value.img)
-
+        let arr = goods.value.imgList ? goods.value.imgList.split(',') : []
+        arr.unshift(goods.value.img)
+        // 过滤空项、纯空白字符
+        imgList.value = arr.filter(item => item && item.trim())
+        //console.log(imgList)
         request.get('/user/'+goods.value.userId).then(res=>{
-            user.value=res.data
+            user.value = res.data
         })
     })
 }
-loadGoods()
-request.post('/goods/addView/' + id.value)
 
 const changeImg = (item) =>{
     img.value=item
@@ -70,13 +68,19 @@ const toConfirm = () => {
   })
 }
 
+onMounted(() => {
+    loadGoods()
+    request.post('/goods/addView/' + id.value)
+
+})
+
 </script>
 
 <template>
 
   <div style="width:80%;margin: 0 auto;min-height: 300px;padding:30px;background-color: #f4f4f4;">
     <el-card style="border-radius: 10px;">
-        <div style="display: flex;gap:10px">
+        <div style="display: flex;gap:10px" @click="router.push('/front/user?id='+user.id)">
             <div>
                 <el-avatar :src="user.avatarUrl" :size="50"></el-avatar>
             </div>
@@ -93,40 +97,31 @@ const toConfirm = () => {
 
 
     <div style="display: flex;gap:20px;margin-top:20px">
-        <el-card style="border-radius: 10px;flex:3">
-            <div style="display:flex;gap:10px">
-                <div style="width:120px;padding:10px">
-
+        <el-card style="border-radius: 10px;flex:3;">
+            <div style="display:flex;gap:10px;">
+                <div style="width:120px;padding:10px;">
                     <div v-for="item in imgList" style="height:100px;width:100px;margin-top:20px" @click="changeImg(item)">
                         <img :src="item" alt="" style="width:100%;height:100%;object-fit:fill">
-
                     </div>
-
                 </div>
-
-                <div style="flex:1;height:500px">
-                    <img :src="img" alt="" style="width: 100%;height: 100%;object-fit: fill;border-radius: 10px;">
-
+                <div style="flex:1;height:100%">
+                    <img :src="img" alt="" style="width: 600px;height: 100%;object-fit: fill;border-radius: 10px;">
                 </div>
             </div>
         </el-card>
-
-        <el-card style="border-radius: 10px;flex:2">
-
+        <el-card style="border-radius: 10px;flex:2;height:100%">
             <div style="display: flex;justify-content: space-between;">
                 <div>
-                    <span style="color: orangered;font-size: 30px;">￥</span>
+                    <span style="color: orangered;font-size: 40px;">￥</span>
                     <span style="color: orangered;font-size: 70px;">{{ goods.price }}</span>
-                    <el-text style="font-size: 20px;" tag="del">原价{{ goods.rePrice }}</el-text>
+                    <el-text style="font-size: 20px;margin-left: 10px;" tag="del">原价 ¥{{ goods.rePrice }}</el-text>
                 </div>
                 <div>
                     <el-tag  type="danger" size="large">{{ goods.shipment }}</el-tag>
                 </div>
-
             </div>
-
-            <div>
-                <span style="color:grey">{{ goods.num }}浏览</span>
+            <div style="margin-left: 80%;">
+                <span style="color:grey;">{{ goods.num }}浏览</span>
             </div>
 
             <el-divider></el-divider>
