@@ -1,276 +1,300 @@
 <script setup>
-import { ref, onBeforeUnmount, onMounted, nextTick, reactive } from "vue";
+import { ref, onBeforeUnmount, onMounted, nextTick, computed } from "vue";
 import { ElMessage } from "element-plus";
 import { useRoute } from "vue-router";
 import request from "@/utils/request.js";
 
 const route = useRoute();
 
-// 个人信息
-const my = reactive({});
-const userId = ref("");
+// ========== 登录账号处理（加try-catch防缓存损坏报错） ==========
+let accountRaw = {};
+try {
+  const storageStr = localStorage.getItem('account');
+  if (storageStr) accountRaw = JSON.parse(storageStr);
+} catch (e) {
+  console.error("账号缓存解析失败，重置登录信息", e);
+  localStorage.removeItem('account');
+}
+const account = ref(accountRaw);
+const userId = Number(account.value?.id) || 0;
 
-// 聊天状态
+// ========== WebSocket 重连相关变量 ==========
+let socket = null;
+const socketUrl = `ws://localhost:8080/chatServer/${userId}`;
+// 重连配置
+const maxReconnectTimes = 5;
+let reconnectCount = 0;
+let reconnectTimer = null;
+
+// ========== 聊天全局状态 ==========
 const friendList = ref([]);
 const currentFriendId = ref(null);
 const currentFriend = ref(null);
 const messages = ref([]);
-const text = ref("");
+const text = ref('');
+// loading状态
+const friendListLoading = ref(false);
+const historyLoading = ref(false);
 
-// WebSocket 相关
-let socket = null;
-let socketUrl = "";
-let isManualClose = false;
-const isWsOnline = ref(false);
-
-// 本地离线留言存储 key
-const LOCAL_OFFLINE_MSG_KEY = "chat_offline_message_list";
+// 【计算属性：兜底空对象，杜绝undefined读取】
+const friendInfo = computed(() => {
+  return currentFriend.value || { avatarUrl: "", nickname: "" };
+});
 
 // 格式化时间
 const formatTime = () => {
   const now = new Date();
-  const pad = (num) => num.toString().padStart(2, "0");
+  const pad = num => num.toString().padStart(2, '0');
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 };
 
-// 获取本地缓存的离线消息
-const getLocalOfflineMsg = () => {
-  const str = localStorage.getItem(LOCAL_OFFLINE_MSG_KEY);
-  return str ? JSON.parse(str) : [];
+// 滚动到底部
+const scrollToBottom = () => {
+  const chatBox = document.getElementById("chat-box");
+  if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
 };
 
-// 保存消息到本地缓存
-const saveLocalOfflineMsg = (msgList) => {
-  localStorage.setItem(LOCAL_OFFLINE_MSG_KEY, JSON.stringify(msgList));
-};
-
-// 移除单条本地缓存消息
-const removeLocalMsg = (time) => {
-  let list = getLocalOfflineMsg();
-  list = list.filter(item => item.time !== time);
-  saveLocalOfflineMsg(list);
-};
-
-// 获取当前登录用户信息
-const getAccount = async () => {
-  try {
-    const res = await request.get("/web/userInfo");
-    if (res.code === "200" && res.data) {
-      Object.assign(my, res.data);
-      userId.value = my.id;
-      return true;
-    } else {
-      ElMessage.error(res.msg || "获取个人信息失败");
-      return false;
-    }
-  } catch (err) {
-    console.error("获取用户信息异常：", err);
-    ElMessage.error("网络异常，获取个人信息失败");
-    return false;
+// 清除所有重连定时器
+const clearReconnectTimer = () => {
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer);
+    reconnectTimer = null;
   }
 };
 
-// 获取好友列表（异步不阻塞渲染）
+// ========== 接口函数 ==========
+// 获取好友列表（带loading）
 const getFriendList = async () => {
+  friendListLoading.value = true;
   try {
     const res = await request.get("/chat/user");
-    friendList.value = res.data || [];
+    if (res.code === 200) {
+      friendList.value = res.data || [];
+    }
   } catch (err) {
     console.error("获取好友列表失败：", err);
+    ElMessage.error("好友列表加载失败");
+  } finally {
+    friendListLoading.value = false;
   }
+};
+
+// 判断目标id是否在好友列表
+const isInFriendList = (targetId) => {
+  return friendList.value.some(item => item.id === targetId);
 };
 
 // 标记消息已读
 const readMessage = (toUserId) => {
-  if (!userId.value || !toUserId) return;
+  if (!userId || !toUserId) return;
   request.get("/chat/clear", {
     params: {
-      fromUserId: userId.value,
+      fromUserId: userId,
       toUserId: toUserId
     }
-  }).then(() => getFriendList()).catch(err => console.error("标记已读失败", err));
+  }).then(() => getFriendList()).catch(err => console.error("标记已读失败：", err));
 };
 
-// 加载好友信息 + 历史聊天记录
+// 获取聊天历史记录（带loading）
+const getChatHistory = async () => {
+  if (!userId || !currentFriendId.value || !currentFriend.value) return;
+  historyLoading.value = true;
+  try {
+    const res = await request.get("/chat/messagehistory", {
+      params: {
+        fromUserId: userId,
+        toUserId: currentFriendId.value
+      }
+    });
+    messages.value = res.data || [];
+    await nextTick(scrollToBottom);
+
+    // 关键逻辑：有聊天记录 && 当前用户不在好友列表 → 刷新好友列表，自动出现
+    if (messages.value.length > 0 && !isInFriendList(currentFriendId.value)) {
+      await getFriendList();
+    }
+  } catch (err) {
+    console.error("加载聊天记录失败", err);
+    ElMessage.error("聊天记录加载异常");
+  } finally {
+    historyLoading.value = false;
+  }
+};
+
+// 加载对方用户信息 + 历史记录
 const loadFriendAndHistory = async (fid) => {
   if (!fid) return;
+  messages.value = [];
   try {
     const userRes = await request.get(`/chat/user/${fid}`);
-    currentFriend.value = userRes.data || {};
+    currentFriend.value = userRes.data;
     currentFriendId.value = Number(fid);
     await getChatHistory();
     readMessage(fid);
   } catch (err) {
     console.error("加载聊天数据失败：", err);
-    ElMessage.error("加载聊天信息异常");
+    currentFriend.value = null;
+    ElMessage.error("该用户信息加载失败");
   }
 };
 
-// 获取聊天历史记录
-const getChatHistory = async () => {
-  if (!userId.value || !currentFriendId.value) return;
-  try {
-    const res = await request.get("/chat/messagehistory", {
-      params: {
-        fromUserId: userId.value,
-        toUserId: currentFriendId.value
-      }
-    });
-    messages.value = res.data || [];
-    scrollToBottom();
-  } catch (err) {
-    console.error("加载聊天记录失败：", err);
-    ElMessage.error("加载聊天记录异常");
-  }
-};
-
-// 滚动到底部（独立nextTick，保证DOM刷新后执行）
-const scrollToBottom = () => {
-  nextTick(() => {
-    const chatBox = document.getElementById("chat-box");
-    if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
-  });
-};
-
-// 初始化 WebSocket
+// ========== WebSocket初始化&重连逻辑 ==========
 const initWebSocket = () => {
+  // 未登录不建立连接
+  if (!userId) return;
+  // 已有活跃连接，不再重复创建
   if (socket && socket.readyState === WebSocket.OPEN) return;
-  isManualClose = false;
-  isWsOnline.value = false;
+  // 清除旧重连定时器
+  clearReconnectTimer();
 
   socket = new WebSocket(socketUrl);
 
   socket.onopen = () => {
-    console.log("✅ WebSocket 连接成功");
-    isWsOnline.value = true;
+    console.log("✅ WebSocket 连接成功，重连次数重置");
+    reconnectCount = 0;
+    clearReconnectTimer();
   };
 
   socket.onerror = (err) => {
     console.error("❌ WebSocket 异常：", err);
-    isWsOnline.value = false;
   };
 
   socket.onmessage = (event) => {
     try {
-      const msg = JSON.parse(event.data);
-      const senderId = msg.fromUserId;
-      // 仅当前聊天好友消息渲染到聊天框
-      if (senderId === currentFriendId.value) {
-        // 消息去重
-        const hasSameMsg = messages.value.some(item => item.time === msg.time);
-        if (!hasSameMsg) {
-          messages.value.push(msg);
-          scrollToBottom();
-          readMessage(senderId);
-        }
+      const res = JSON.parse(event.data);
+      console.log("📥 收到服务端消息：", res);
+      // 使用id去重（后端每条消息都有唯一id）
+      const exist = messages.value.some(item => item.id === res.id);
+      if (!exist) {
+        messages.value.push(res);
+        nextTick(scrollToBottom);
+        // 收到消息实时刷新好友列表，更新未读红点
+        getFriendList();
       }
-      // 任意消息刷新好友未读数量
-      getFriendList();
+      // 当前聊天窗口收到对方消息自动标已读
+      if (res.fromUserId === currentFriendId.value) {
+        readMessage(res.fromUserId);
+      }
     } catch (err) {
-      console.error("解析ws消息失败", err);
+      console.error("解析消息失败：", err);
     }
   };
 
-  socket.onclose = () => {
-    console.log("🔌 WebSocket 连接关闭");
+  socket.onclose = (e) => {
+    console.log("🔌 WebSocket 连接关闭", e.code, e.reason);
     socket = null;
-    isWsOnline.value = false;
-    if (!isManualClose) setTimeout(initWebSocket, 3000);
+    clearReconnectTimer();
+
+    // 主动关闭不重连（页面卸载手动close）
+    if (e.code === 1000) return;
+    // 超出最大重试次数不再重连
+    if (reconnectCount >= maxReconnectTimes) {
+      ElMessage.error("聊天服务连接失败，已达最大重连次数，请刷新页面");
+      return;
+    }
+
+    // 延时自动重连
+    reconnectCount++;
+    console.log(`开始第${reconnectCount}次重连，共允许${maxReconnectTimes}次`);
+    reconnectTimer = setTimeout(() => {
+      initWebSocket();
+    }, 2000);
   };
 };
 
-// 切换好友
+// ========== 页面交互方法 ==========
+// 点击好友切换聊天
 const selectFriend = async (friend) => {
   if (!friend?.id) return;
-  text.value = "";
+  currentFriendId.value = Number(friend.id);
+  text.value = '';
   await loadFriendAndHistory(friend.id);
 };
 
-// 发送消息核心：优先走WebSocket实时通道，再异步入库
+// 发送消息（入库失败删除本地临时消息）
 const send = async () => {
   const content = text.value.trim();
-  if (!content) return ElMessage.warning("请输入消息内容");
-  if (!currentFriendId.value) return ElMessage.warning("请选择聊天对象");
+  if (!content) {
+    ElMessage.warning("请输入消息内容");
+    return;
+  }
+  if (!currentFriendId.value) {
+    ElMessage.warning("请选择聊天对象");
+    return;
+  }
+  if (!socket || socket.readyState !== WebSocket.OPEN) {
+    ElMessage.error("聊天连接已断开，等待自动重连");
+    return;
+  }
 
   const sendData = {
     text: content,
     type: "text",
     time: formatTime(),
-    fromUserId: userId.value,
+    fromUserId: userId,
     toUserId: currentFriendId.value,
     isRead: false
   };
-  text.value = "";
 
-  // 1. WS在线：优先发送WebSocket，实时推送给对方（解决实时延迟核心）
-  if (isWsOnline.value && socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify(sendData));
-  }
+  console.log("📤 发送消息：", sendData);
+  // 本地临时渲染消息
+  messages.value.push(sendData);
+  const tempMsgIndex = messages.value.length - 1;
+  text.value = '';
+  nextTick(scrollToBottom);
 
-  // 2. 同步调用后端保存消息（方案B：双逻辑同时保留）
+  socket.send(JSON.stringify(sendData));
+
   try {
     const res = await request.post("/chat", sendData);
-    if (res.code === "200") {
-      removeLocalMsg(sendData.time);
-      // 入库成功再渲染自己消息，持久化不丢失
-      messages.value.push(sendData);
-      scrollToBottom();
-      ElMessage.success("发送成功");
-    } else {
-      ElMessage.error(res.msg || "发送失败");
-      const list = getLocalOfflineMsg();
-      list.push(sendData);
-      saveLocalOfflineMsg(list);
+    if (res.code !== 200 && res.code !== '200') {
+      throw new Error(res.msg || "服务端存储失败");
     }
+    // 发送成功，不弹窗提示，减少打扰
   } catch (err) {
-    console.error("消息入库失败，离线缓存", err);
-    const list = getLocalOfflineMsg();
-    list.push(sendData);
-    saveLocalOfflineMsg(list);
-    // 离线临时展示，下次联网补发
-    messages.value.push(sendData);
-    scrollToBottom();
+    console.error("消息入库请求异常：", err);
+    // 需求A：入库失败删除本地临时消息
+    messages.value.splice(tempMsgIndex, 1);
+    ElMessage.error("消息发送失败，请重试");
   }
 };
 
-// 页面挂载
+// ========== 生命周期 ==========
 onMounted(async () => {
-  const hasUser = await getAccount();
-  if (!hasUser) return;
+  if (!userId) {
+    ElMessage.warning("请先登录");
+    return;
+  }
 
-  // 动态拼接ws地址
-  const { protocol, host } = window.location;
-  const wsProtocol = protocol === "https:" ? "wss:" : "ws:";
-  socketUrl = `${wsProtocol}//${host}/chatServer/${my.id}`;
-
-  initWebSocket();
-  getFriendList();
-
-  // 路由参数自动打开聊天
   const targetIdStr = route.query.id;
+  let jumpTargetId = null;
   if (targetIdStr) {
     const targetId = Number(targetIdStr);
-    if (!isNaN(targetId)) await loadFriendAndHistory(targetId);
+    if (!isNaN(targetId)) jumpTargetId = targetId;
   }
 
-  // 补发离线缓存消息
-  const offlineList = getLocalOfflineMsg();
-  for (const msg of offlineList) {
-    try {
-      const res = await request.post("/chat", msg);
-      if (res.code === "200") removeLocalMsg(msg.time);
-    } catch (err) {
-      console.log("离线补发中断，下次进入重试");
-      break;
-    }
+  // 先加载好友列表
+  await getFriendList();
+
+  // 【修改点：不再校验是否在好友列表，直接打开聊天】
+  if (jumpTargetId) {
+    currentFriendId.value = jumpTargetId;
+    await loadFriendAndHistory(jumpTargetId);
   }
+
+  // 初始化WS连接
+  initWebSocket();
 });
 
-// 页面销毁关闭ws
 onBeforeUnmount(() => {
-  isManualClose = true;
-  if (socket) socket.close();
-  socket = null;
+  // 清除重连定时器，停止后台重试
+  clearReconnectTimer();
+  reconnectCount = maxReconnectTimes;
+  // 安全关闭WS，标记正常关闭不触发重连
+  if (socket) {
+    socket.close(1000, "页面卸载主动关闭");
+    socket = null;
+  }
 });
 </script>
 
@@ -279,6 +303,7 @@ onBeforeUnmount(() => {
     <!-- 左侧好友列表 -->
     <div class="friend-list">
       <div class="title">聊天列表</div>
+      <div v-if="friendListLoading" class="loading-tip">加载好友中...</div>
       <div
         class="friend-item"
         v-for="item in friendList"
@@ -287,51 +312,65 @@ onBeforeUnmount(() => {
         @click="selectFriend(item)"
       >
         <div class="avatar">
-          <img :src="item.avatarUrl || ''" alt="头像" />
+          <img
+            :src="item.avatarUrl || '/default-avatar.png'"
+            alt="头像"
+            @error="$event.target.src = ''"
+          />
         </div>
         <div class="info">
           <div class="name">{{ item.nickname }}</div>
           <div class="unread" v-if="item.count > 0">{{ item.count }}</div>
         </div>
       </div>
+      <div v-if="!friendListLoading && friendList.length === 0" class="empty-tip">暂无好友</div>
     </div>
 
     <!-- 右侧聊天区域 -->
     <div class="chat-main">
-      <div class="chat-header" v-if="currentFriend?.nickname">
-        正在和 {{ currentFriend.nickname }} 聊天
+      <!-- 区分好友 / 临时会话用户 -->
+      <div class="chat-header" v-if="currentFriend">
+        {{ isInFriendList(currentFriendId) ? '正在和' : '临时会话：' }} {{ friendInfo.nickname }}
       </div>
       <div class="chat-header empty" v-else-if="currentFriendId">
-        正在和用户 {{ currentFriendId }} 聊天
+        用户ID：{{ currentFriendId }}（临时会话）
       </div>
       <div class="chat-header empty" v-else>
-        请选择好友开始聊天
+        请选择好友或通过链接打开临时会话
       </div>
 
-      <!-- 聊天内容区 -->
-      <div id="chat-box" class="chat-content">
-        <div class="msg-item" v-for="msg in messages" :key="msg.time">
-          <!-- 自己的消息 -->
-          <div v-if="msg.fromUserId === userId" class="msg-row self-row">
-            <div class="msg-bubble self-bubble">
+      <div id="chat-box" class="chat-content" v-if="currentFriend">
+        <div v-if="historyLoading" class="loading-tip chat-loading">加载聊天记录中...</div>
+        <div class="msg-item" v-for="msg in messages" :key="msg.id">
+          <!-- 自己消息 -->
+          <div v-if="msg.fromUserId === userId" class="self-msg">
+            <div class="msg-text">
               {{ msg.text }}
               <div class="msg-time">{{ msg.time }}</div>
             </div>
-            <img class="msg-avatar" :src="my.avatarUrl || ''" alt="头像" />
-          </div>
-          <!-- 对方消息 -->
-          <div v-else class="msg-row other-row">
             <img
               class="msg-avatar"
-              :src="currentFriend?.avatarUrl || '/default-avatar.png'"
-              alt="头像"
+              :src="account.value.avatarUrl"
+              alt="我的头像"
+              @error="$event.target.src = ''"
             />
-            <div class="msg-bubble">
+          </div>
+
+          <!-- 对方消息 -->
+          <div v-else class="other-msg-wrap">
+            <img
+              class="msg-avatar"
+              :src="friendInfo.avatarUrl"
+              alt="对方头像"
+              @error="$event.target.src = ''"
+            />
+            <div class="msg-text other-msg">
               {{ msg.text }}
               <div class="msg-time">{{ msg.time }}</div>
             </div>
           </div>
         </div>
+        <div v-if="!historyLoading && messages.length === 0" class="empty-tip chat-empty">暂无聊天记录，发一条消息开启对话</div>
       </div>
 
       <!-- 输入区域 -->
@@ -349,47 +388,42 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-/* 整体容器 */
 .chat-container {
   display: flex;
   width: 1000px;
   height: 600px;
   border: 1px solid #e5e6eb;
-  border-radius: 8px;
+  border-radius: 4px;
   overflow: hidden;
   margin: 20px auto;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.08);
-  background: #fff;
 }
 
-/* 左侧好友列表 */
+/* 好友列表 */
 .friend-list {
   width: 240px;
-  border-right: 1px solid #ebeef5;
-  background-color: #f8f9fa;
+  border-right: 1px solid #e5e6eb;
+  background: #f9fafb;
 }
 .friend-list .title {
   height: 50px;
   line-height: 50px;
   text-align: center;
   font-size: 16px;
-  font-weight: 600;
-  border-bottom: 1px solid #ebeef5;
-  color: #333;
+  font-weight: bold;
+  border-bottom: 1px solid #e5e6eb;
 }
 .friend-item {
   display: flex;
   align-items: center;
-  padding: 12px 15px;
+  padding: 10px 15px;
   cursor: pointer;
   position: relative;
-  transition: background 0.2s;
 }
 .friend-item:hover {
-  background-color: #e9edf5;
+  background: #ebeef5;
 }
 .friend-item.active {
-  background-color: #d7e3fc;
+  background: #dce3f4;
 }
 .avatar img {
   width: 40px;
@@ -403,22 +437,21 @@ onBeforeUnmount(() => {
 }
 .name {
   font-size: 14px;
-  color: #333;
 }
 .unread {
   position: absolute;
   right: 15px;
-  top: 14px;
+  top: 12px;
   background: #f53f3f;
   color: #fff;
   font-size: 12px;
   padding: 2px 6px;
-  border-radius: 12px;
+  border-radius: 10px;
   min-width: 18px;
   text-align: center;
 }
 
-/* 右侧聊天主体 */
+/* 聊天主体 */
 .chat-main {
   flex: 1;
   display: flex;
@@ -428,59 +461,42 @@ onBeforeUnmount(() => {
   height: 50px;
   line-height: 50px;
   padding: 0 20px;
-  border-bottom: 1px solid #ebeef5;
+  border-bottom: 1px solid #e5e6eb;
   font-size: 15px;
-  color: #333;
 }
 .chat-header.empty {
   color: #999;
   text-align: center;
 }
 
-/* 聊天内容区域 */
 .chat-content {
   flex: 1;
   padding: 20px;
   overflow-y: auto;
-  background-color: #fafafa;
-}
-.msg-item {
-  margin-bottom: 18px;
+  background: #fff;
 }
 
-.msg-row {
+.chat-input {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-.self-row {
-  justify-content: flex-end;
-}
-.other-row {
-  justify-content: flex-start;
+  align-items: center;
+  padding: 15px;
+  border-top: 1px solid #e5e6eb;
 }
 
-.msg-bubble {
-  max-width: 60%;
-  padding: 10px 14px;
-  border-radius: 12px;
-  word-wrap: break-word;
-  font-size: 14px;
-  line-height: 1.5;
+.msg-item {
+  margin-bottom: 16px;
 }
-.self-bubble {
-  background-color: #409eff;
-  color: #ffffff;
-  border-bottom-right-radius: 4px;
+.self-msg {
+  display: flex;
+  align-items: flex-end;
+  flex-direction: row-reverse;
+  gap: 8px;
 }
-.msg-bubble:not(.self-bubble) {
-  background-color: #ffffff;
-  color: #333;
-  border: 1px solid #e5e6eb;
-  border-bottom-left-radius: 4px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+.other-msg-wrap {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
 }
-
 .msg-avatar {
   width: 36px;
   height: 36px;
@@ -488,20 +504,35 @@ onBeforeUnmount(() => {
   object-fit: cover;
   flex-shrink: 0;
 }
-
+.msg-text {
+  max-width: 60%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  word-wrap: break-word;
+}
+.self-msg .msg-text {
+  background: #409eff;
+  color: #fff;
+}
+.msg-text.other-msg {
+  background: #f4f4f5;
+  color: #333;
+}
 .msg-time {
   font-size: 12px;
-  opacity: 0.75;
+  opacity: 0.7;
   margin-top: 4px;
   text-align: right;
 }
 
-/* 输入区域 */
-.chat-input {
-  display: flex;
-  align-items: center;
-  padding: 15px;
-  border-top: 1px solid #ebeef5;
-  background: #fff;
+/* 加载/空状态样式 */
+.loading-tip, .empty-tip {
+  text-align: center;
+  padding: 20px;
+  color: #999;
+  font-size: 14px;
+}
+.chat-loading, .chat-empty {
+  padding: 60px 0;
 }
 </style>
