@@ -117,16 +117,16 @@ onMounted(async () => {
         </div>
         <!-- 昵称 + 最新消息 -->
         <div class="info">
-          <div class="name-row">
-            <span class="name">{{ item.nickname }}</span>
-            <span class="msg-time">{{ item.lastMsgTime || '' }}</span>
-          </div>
+          <div class="name">{{ item.nickname }}</div>
           <div class="last-msg">
             {{ item.lastMsg || '暂无聊天记录' }}
           </div>
         </div>
-        <!-- 未读消息角标 -->
-        <div class="unread" v-if="item.count > 0">{{ item.count }}</div>
+        <!-- 右侧：未读数 + 消息时间 上下排列 -->
+        <div class="right-col">
+          <div class="unread" v-if="item.count > 0">{{ item.count }}</div>
+          <div class="msg-time">{{ item.lastMsgTime || '' }}</div>
+        </div>
       </div>
 
       <!-- 空列表兜底 -->
@@ -167,15 +167,15 @@ onMounted(async () => {
   overflow-y: auto;
 }
 
-/* 列表项 */
+/* 列表项布局：头像 + 文字区 + 右侧垂直信息区 */
 .friend-item {
   display: flex;
   align-items: center;
   padding: 12px 15px;
   cursor: pointer;
-  position: relative;
   transition: background 0.2s;
   border-bottom: 1px solid #f0f2f5;
+  gap: 12px;
 }
 .friend-item:hover {
   background-color: #e9edf5;
@@ -189,26 +189,15 @@ onMounted(async () => {
   object-fit: cover;
 }
 
-/* 昵称+消息区域 */
+/* 昵称+消息主体区域 */
 .info {
-  margin-left: 12px;
   flex: 1;
   overflow: hidden;
-}
-/* 昵称 + 消息时间 同行布局 */
-.name-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4px;
 }
 .name {
   font-size: 14px;
   color: #333;
-}
-.msg-time {
-  font-size: 12px;
-  color: #999;
+  margin-bottom: 4px;
 }
 /* 最新消息文本，超出自动省略 */
 .last-msg {
@@ -219,11 +208,18 @@ onMounted(async () => {
   text-overflow: ellipsis;
 }
 
-/* 未读角标 */
+/* 右侧垂直容器：未读、时间上下排列 */
+.right-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+  min-width: 70px;
+}
+
+/* 未读角标不再绝对定位，放入右侧容器 */
 .unread {
-  position: absolute;
-  right: 15px;
-  top: 14px;
   background: #f53f3f;
   color: #fff;
   font-size: 12px;
@@ -231,6 +227,12 @@ onMounted(async () => {
   border-radius: 12px;
   min-width: 18px;
   text-align: center;
+}
+
+.msg-time {
+  font-size: 12px;
+  color: #999;
+  white-space: nowrap;
 }
 
 /* 加载/空数据提示 */
