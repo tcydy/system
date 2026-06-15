@@ -208,7 +208,7 @@ onMounted(() => {
                         </div>
                             <!-- 分割线 -->
                             <el-divider></el-divider>
-                            <div style="display: flex;gap:20px;">
+                            <div style="display: flex;gap:20px;" @click="router.push('/front/goodsDetail?id=' + order.itemId)">
                                 <!-- 左边照片 -->
                                 <div style="height: 100px;width:100px;">
                                     <el-image 

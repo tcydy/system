@@ -126,7 +126,6 @@ loadUser()
 
 <template>
     <div style="width:100%;height:100%;background-color:#f1f1f1;padding:50px">
-
         <div style="width: 80%;margin: 0 auto;min-height: 200px;">
             <el-card style="border-radius: 20px;">
 

@@ -105,7 +105,7 @@ onMounted(() => {
                     </div>
                 </div>
                 <div style="flex:1;height:100%">
-                    <img :src="img" alt="" style="width: 600px;height: 100%;object-fit: fill;border-radius: 10px;">
+                    <img :src="img" alt="" style="width: 90%;height: 100%;object-fit: fill;border-radius: 10px;">
                 </div>
             </div>
         </el-card>
@@ -117,7 +117,7 @@ onMounted(() => {
                     <el-text style="font-size: 20px;margin-left: 10px;" tag="del">原价 ¥{{ goods.rePrice }}</el-text>
                 </div>
                 <div>
-                    <el-tag  type="danger" size="large">{{ goods.shipment }}</el-tag>
+                    <el-tag  type="danger" style="font-size: 16px;">{{ goods.shipment }}</el-tag>
                 </div>
             </div>
             <div style="margin-left: 80%;">
@@ -128,9 +128,7 @@ onMounted(() => {
 
             <h4>{{ goods.name }}</h4>
 
-            <div v-html="goods.content">
-
-            </div>
+            <div v-html="goods.content"></div>
 
             <el-divider></el-divider>
 
@@ -150,13 +148,16 @@ onMounted(() => {
 
             <div class="buttons" style="display:flex;gap: 10px;">
 
-                <button >
+                <div v-if="goods.status==='已售出'" style="font-weight: bolder;font-size:large;color:#ff4500;" >
+                    卖掉了
+                </div>
+                <button v-if="goods.status==='上架'">
                     聊一聊
                 </button>
-                <button @click="toConfirm" >
+                <button @click="toConfirm" v-if="goods.status==='上架'" >
                     立即购买
-                </button>                
-                <button style="" @click="collect">
+                </button>
+                <button style="" @click="collect" v-if="goods.status==='上架'">
                     <el-icon v-if="goods.isCollected"><StarFilled/></el-icon>
                     <el-icon v-else><Star/></el-icon>
                     {{ goods.isCollected ?'已收藏':'收藏' }}

@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Date;
 
 
+
 /*前端控制器*/
 @RestController
 @RequestMapping("/orders")
@@ -168,6 +169,14 @@ public class OrdersController {
         return Result.success(ordersService.getById(id));
     }
 
+    @GetMapping("/usergoods/{id}")
+    public Result findOneByUserGoods(@PathVariable Integer id) {
+        LambdaQueryWrapper<Orders> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.orderByDesc(Orders::getId);
+        queryWrapper.eq(Orders::getItemId, id);
+        return Result.success(ordersService.list());
+    }
+
     
     @GetMapping("/front/page")
     public Result findFrontPage(@RequestParam Integer pageNum,
@@ -203,14 +212,15 @@ public class OrdersController {
     @GetMapping("/page")
     public  Result findPage(@RequestParam Integer pageNum,
                             @RequestParam Integer pageSize,
-                            @RequestParam(defaultValue = "")String keyword){
+            @RequestParam(defaultValue = "") String keyword) {
         LambdaQueryWrapper<Orders> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.orderByDesc(Orders::getId);
 
-        if(StrUtil.isNotBlank(keyword)){
-            queryWrapper.like(Orders::getNo,keyword);
+        if (StrUtil.isNotBlank(keyword)) {
+            queryWrapper.like(Orders::getNo, keyword);
         }
-        return Result.success(ordersService.page(new Page<>(pageNum,pageSize),queryWrapper));
+        return Result.success(ordersService.page(new Page<>(pageNum, pageSize), queryWrapper));
     }
+    
 
 }

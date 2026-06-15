@@ -137,7 +137,7 @@ const handleUpdateAccountFail=()=>{
 
           <el-menu-item index="/back/type">
             <el-icon><MessageBox /></el-icon>
-            <template #title>闲置物品分类管理</template>
+            <template #title>标签类别管理</template>
           </el-menu-item>
 
           <el-menu-item index="/back/goods">

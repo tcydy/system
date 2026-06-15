@@ -419,7 +419,7 @@ onMounted(() => {
     </el-card>
 
 <!--    表单对话框-->
-    <el-dialog v-model="dialogFormVisible" :title="form.id ? '编辑' : '新增'" width="30%" destroy-on-close center>
+    <el-dialog v-model="dialogFormVisible" :title="form.id ? '编辑' : '新增'" width="70%" destroy-on-close center>
       <el-form  :model="form" label-width="100px">
 
 
@@ -469,7 +469,7 @@ onMounted(() => {
           <el-input v-model="form.rePrice" type="number" placeholder="请输入"/>
         </el-form-item>
 
-<!--        富文本编辑-->
+        <!--富文本编辑-->
         <el-form-item label="详情">
           <div style="border:1px solid #ccc;z-index:100">
             <Toolbar style="border-bottom:1px solid #ccc" :editor="editorRefContent" :default-config="editorConfig" mode="default"/>

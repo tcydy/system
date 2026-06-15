@@ -32,10 +32,7 @@ public class GoodsController {
             goods.setUserId(TokenUtils.getCurrentUser().getId());
             goods.setNum(0);
             goods.setStatus("上架");
-
             goods.setDate(DateUtil.today());
-
-
         }
         return Result.success(goodsService.saveOrUpdate(goods));
     }
