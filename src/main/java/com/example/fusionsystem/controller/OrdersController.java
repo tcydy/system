@@ -170,11 +170,13 @@ public class OrdersController {
     }
 
     @GetMapping("/usergoods/{id}")
-    public Result findOneByUserGoods(@PathVariable Integer id) {
+    public Result findOrdersByItemId(@PathVariable Integer id) {
         LambdaQueryWrapper<Orders> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.orderByDesc(Orders::getId);
+        // 先过滤条件，再排序
         queryWrapper.eq(Orders::getItemId, id);
-        return Result.success(ordersService.list());
+        // 传入 queryWrapper 进行查询
+        List<Orders> orders = ordersService.list(queryWrapper);
+        return Result.success(orders);
     }
 
     

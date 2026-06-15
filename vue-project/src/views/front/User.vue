@@ -113,44 +113,44 @@ const gotoUser = async (userId) => {
   }
 }
 
-// ========== 编辑弹窗相关 ==========
+// 编辑弹窗相关
 const form = ref({})
 // 单图、多图
 const imgList = ref([])
 
 // 编辑
 const handleEdit = (item) => {
-  form.value = item;
+    form.value = item;
 
-  // 多图列表处理
-  if (form.value.imgList) {
-    // 这里也顺便加个类型判断，避免imgList不是字符串时报错
-    imgList.value = typeof form.value.imgList === 'string' 
-      ? form.value.imgList.split(',') 
-      : [];
-  } else {
-    imgList.value = [];
-  }
-
-  htmlContent.value = form.value.content || '';
-
-  // 重点修复：place 字段的处理
-  if (form.value.place) {
-    // 只有当它是字符串时，才执行 split
-    if (typeof form.value.place === 'string') {
-      form.value.place = form.value.place.split('/');
-    } else if (Array.isArray(form.value.place)) {
-      // 如果已经是数组，直接赋值，不做处理
-      form.value.place = form.value.place;
+    // 多图列表处理
+    if (form.value.imgList) {
+        // 这里也顺便加个类型判断，避免imgList不是字符串时报错
+        imgList.value = typeof form.value.imgList === 'string' 
+        ? form.value.imgList.split(',') 
+        : [];
     } else {
-      // 其他类型（数字、对象等）直接设为空数组
-      form.value.place = [];
+        imgList.value = [];
     }
-  } else {
-    form.value.place = [];
-  }
 
-  dialogFormVisible.value = true;
+    htmlContent.value = form.value.content || '';
+
+    // 重点修复：place 字段的处理
+    if (form.value.place) {
+        // 只有当它是字符串时，才执行 split
+        if (typeof form.value.place === 'string') {
+        form.value.place = form.value.place.split('/');
+        } else if (Array.isArray(form.value.place)) {
+        // 如果已经是数组，直接赋值，不做处理
+        form.value.place = form.value.place;
+        } else {
+        // 其他类型（数字、对象等）直接设为空数组
+        form.value.place = [];
+        }
+    } else {
+        form.value.place = [];
+    }
+
+    dialogFormVisible.value = true;
 };
 
 //保存
@@ -182,18 +182,27 @@ const save=()=>{
 }
 
 // 删除商品
-const confirmDelete = (goodsId) => {
-  ElMessageBox.confirm(
-    '确定要删除这条数据吗？',
-    '警告',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
+const confirmDelete =async (goodsId,item) => {
+    const res = await request.get('/orders/usergoods/' + goodsId)
+    if (res.data[0]) {
+        const orderStatus = res.data[0].status
+        if (orderStatus !== "交易完成") {
+            console.log(orderStatus)
+            ElMessage.warning('交易进行中，不可删除！')
+            return;
+        }
     }
-  ).then(() => {
-    del(goodsId)
-  }).catch(() => { })
+    ElMessageBox.confirm(
+        '确定要删除这条数据吗？',
+        '警告',
+        {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+        }
+    ).then(() => {
+        del(goodsId)
+    }).catch(() => { })
 }
 
 const del = async (goodsId) => {
@@ -225,22 +234,11 @@ const removeImgList = (index) => {
   imgList.value.splice(index, 1);
 };
 
-// 字符串图片转数组
-const getImageList = (imgString) => {
-  if (!imgString) return [];
-  return imgString.split(',');
-};
-
-// 根据id获取分类名称
-const getTypeName = (typeId) => {
-  const type = types.value.find(item => item.id == typeId);
-  return type ? type.name : '';
-};
-
-// 辅助判断：当前是不是本人
+// 当前是不是本人
 const isSelf = computed(() => {
   return person.id && user.value.id && person.id == user.value.id
 })
+
 
 // 页面初始化
 onMounted(async () => {
@@ -312,8 +310,8 @@ onMounted(async () => {
             <el-tooltip v-if="item.status==='上架'" content="编辑" placement="top" effect="light">
               <el-button circle type="primary" :icon="Edit" @click="handleEdit(item)" />
             </el-tooltip>
-            <el-tooltip v-if="item.status==='上架'" content="删除" placement="top" effect="light">
-              <el-button circle type="danger" :icon="Delete" @click="confirmDelete(item.id)" />
+            <el-tooltip content="删除" placement="top" effect="light">
+              <el-button circle type="danger" :icon="Delete" @click="confirmDelete(item.id,item.status)" />
             </el-tooltip>
           </div>
         </div>
