@@ -5,21 +5,75 @@ import { ElMessage } from 'element-plus'
 import request from '@/utils/request.js'
 
 const router = useRouter()
-// 好友列表数据
+// 当前登录用户ID
+const userId = ref('')
+// 好友列表
 const friendList = ref([])
+// 加载状态
+const loading = ref(false)
 
-// 获取好友列表（复用原有接口）
+// 1. 获取当前登录用户信息
+const getAccount = async () => {
+  try {
+    const res = await request.get('/web/userInfo')
+    if (res.code === '200' && res.data) {
+      userId.value = res.data.id
+      return true
+    }
+    ElMessage.error('获取用户信息失败')
+    return false
+  } catch (err) {
+    console.error('获取用户信息异常：', err)
+    ElMessage.error('网络异常')
+    return false
+  }
+}
+
+// 2. 根据 自己ID + 好友ID 获取双方最后一条消息
+const getLastMsg = async (toUserId) => {
+  if (!userId.value || !toUserId) return ''
+  try {
+    const res = await request.get('/chat/messagehistory', {
+      params: {
+        fromUserId: userId.value,
+        toUserId: toUserId
+      }
+    })
+    const list = res.data || []
+    // 取最后一条消息的文本内容
+    if (list.length > 0) {
+      return list[list.length - 1].text
+    }
+    return ''
+  } catch (err) {
+    console.error('查询聊天记录失败：', err)
+    return ''
+  }
+}
+
+// 3. 获取好友列表，并批量查询最新消息
 const getFriendList = async () => {
+  loading.value = true
   try {
     const res = await request.get('/chat/user')
     if (res.code === '200') {
-      friendList.value = res.data || []
+      const list = res.data || []
+      friendList.value = list
+
+      // 遍历好友，逐个查询最后一条消息
+      for (const item of friendList.value) {
+        const lastMsg = await getLastMsg(item.id)
+        // 给当前好友项挂载最新消息字段
+        item.lastMsg = lastMsg
+      }
     } else {
-      ElMessage.error(res.msg || '获取消息列表失败')
+      ElMessage.error(res.msg || '获取好友列表失败')
     }
   } catch (err) {
     console.error('获取好友列表异常：', err)
     ElMessage.error('网络异常，请稍后重试')
+  } finally {
+    loading.value = false
   }
 }
 
@@ -28,23 +82,26 @@ const goToChat = (targetId) => {
   if (!targetId) return
   router.push({
     path: '/front/chat',
-    query: {
-      id: targetId
-    }
+    query: { id: targetId }
   })
 }
 
-// 页面初始化加载数据
-onMounted(() => {
-  getFriendList()
+onMounted(async () => {
+  // 先拿到自身ID，再加载列表和消息预览
+  const hasUser = await getAccount()
+  if (hasUser) {
+    await getFriendList()
+  }
 })
 </script>
 
 <template>
   <div class="message-container">
     <div class="title">消息列表</div>
-    <!-- 好友/消息列表 -->
     <div class="friend-list">
+      <!-- 加载中提示 -->
+      <div class="loading-tip" v-if="loading">加载中...</div>
+
       <div
         class="friend-item"
         v-for="item in friendList"
@@ -58,15 +115,16 @@ onMounted(() => {
         <!-- 昵称 + 最新消息 -->
         <div class="info">
           <div class="name">{{ item.nickname }}</div>
-          <!-- 最新消息预览 -->
-          <div class="last-msg">{{ item.lastMessage || '暂无聊天记录' }}</div>
+          <div class="last-msg">
+            {{ item.lastMsg || '暂无聊天记录' }}
+          </div>
         </div>
-        <!-- 未读消息数 -->
+        <!-- 未读消息角标 -->
         <div class="unread" v-if="item.count > 0">{{ item.count }}</div>
       </div>
 
       <!-- 空列表兜底 -->
-      <div class="empty-tip" v-if="friendList.length === 0">
+      <div class="empty-tip" v-if="!loading && friendList.length === 0">
         暂无聊天好友
       </div>
     </div>
@@ -136,7 +194,7 @@ onMounted(() => {
   color: #333;
   margin-bottom: 4px;
 }
-/* 最新消息文本 */
+/* 最新消息文本，超出自动省略 */
 .last-msg {
   font-size: 12px;
   color: #999;
@@ -159,7 +217,8 @@ onMounted(() => {
   text-align: center;
 }
 
-/* 空数据提示 */
+/* 加载/空数据提示 */
+.loading-tip,
 .empty-tip {
   text-align: center;
   padding: 40px 0;
