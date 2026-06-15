@@ -141,7 +141,6 @@ public class ChatController {
             object.set("online", false);
             array.add(object);
         }
-
         return Result.success(array);
     }
 

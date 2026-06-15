@@ -40,7 +40,7 @@ const rules={
   ],
   nickname:[
     {required:true,message:'请输入昵称',trigger:'blur'},
-    {min:3,max:10,message: '长度在3到10个字符',trigger: 'blur'}
+    {min:1,max:10,message: '长度在1到10个字符',trigger: 'blur'}
   ],
   password:[
     {required:true,message:'请输入密码',trigger:'blur'},

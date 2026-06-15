@@ -1,16 +1,29 @@
 <script setup>
-import { ref, onBeforeUnmount, onMounted, nextTick, watch } from "vue";
-import axios from "axios";
+import { ref, onBeforeUnmount, onMounted, nextTick, reactive } from "vue";
 import { ElMessage } from "element-plus";
 import { useRoute } from "vue-router";
 import request from "@/utils/request.js";
 
 const route = useRoute();
 
-// 当前登录用户
-const account = ref(localStorage.getItem('account')
-  ? JSON.parse(localStorage.getItem('account'))
-  : {});
+//当前登录的用户
+const account=ref(
+    localStorage.getItem('account')?JSON.parse(localStorage.getItem('account')):{}
+)
+const my=reactive({})
+//获取用户信息
+const getAccount=()=>{
+  request.get('/web/userInfo').then(res=>{
+    if(res.code==='200'&&res.data){
+      my.value = res.data
+      console.log('my.value:',my.value)
+    }else{
+      ElMessage.error(res.msg)
+    }
+  })
+}
+
+
 const userId = Number(account.value?.id) || 0;
 
 
@@ -37,6 +50,8 @@ onMounted(async () => {
     ElMessage.warning("请先登录");
     return;
   }
+  console.log('account:',account)
+  getAccount()
 
   // 解析路由参数，自动设置聊天对象
   const targetIdStr = route.query.id;
@@ -53,33 +68,15 @@ onMounted(async () => {
 
   // 有聊天对象则加载用户信息 + 历史记录
   if (currentFriendId.value) {
-    await loadFriendAndHistory(currentFriendId.value);
+    await loadFriendAndHistory(currentFriend.id);
   }
 
-  loadFriendAndHistory(currentFriendId.value)
+  loadFriendAndHistory(currentFriend.id)
   getChatHistory()
 
   // 初始化 WebSocket
   initWebSocket();
 });
-
-// 监听路由切换（新id自动切换聊天）
-// watch(
-//   () => route.query.id,
-//   async (newId) => {
-//     if (!newId) {
-//       currentFriendId.value = null;
-//       currentFriend.value = null;
-//       messages.value = [];
-//       return;
-//     }
-//     const fid = Number(newId);
-//     if (!isNaN(fid)) {
-//       currentFriendId.value = fid;
-//       await loadFriendAndHistory(fid);
-//     }
-//   }
-// );
 
 // 根据用户ID 加载用户信息 + 历史聊天记录
 const loadFriendAndHistory = async (fid) => {
@@ -138,11 +135,11 @@ const initWebSocket = () => {
 // 获取好友列表
 const getFriendList = async () => {
   try {
-    const res = await axios.get("/chat/user");
-    if (res.data.code === 200) {
-      friendList.value = res.data.data;
-      console.log('friendList.value',friendList.value)
-    }
+    const res = await request.get("/chat/user");
+    console.log('getFriendList res:', res)
+    friendList.value = res.data;
+    console.log('friendList.value',friendList.value)
+
   } catch (err) {
     console.error("获取好友列表失败：", err);
   }
@@ -158,7 +155,7 @@ const selectFriend = async (friend) => {
 // 标记消息已读（对接后端 /chat/clear）
 const readMessage = async (toUserId) => {
   try {
-    await axios.get("/chat/clear", {
+    await request.get("/chat/clear", {
       params: {
         fromUserId: userId,
         toUserId: toUserId
@@ -264,7 +261,7 @@ const getChatHistory=async() => {
         @click="selectFriend(item)"
       >
         <div class="avatar">
-          <img :src="item.avatarUrl || '/default-avatar.png'" alt="头像" />
+          <img :src="item.avatarUrl || ''" alt="头像" />
         </div>
         <div class="info">
           <div class="name">{{ item.nickname }}</div>
@@ -294,7 +291,7 @@ const getChatHistory=async() => {
               {{ msg.text }}
               <div class="msg-time">{{ msg.time }}</div>
             </div>
-            <img class="msg-avatar" :src="account.avatarUrl || '/default-avatar.png'" alt="头像" />
+            <img class="msg-avatar" :src="my.avatarUrl || ''" alt="头像" />
           </div>
 
           <!-- 对方消息：整体靠左 | 头像在左，气泡在右 -->
@@ -422,10 +419,10 @@ const getChatHistory=async() => {
   margin-bottom: 18px;
 }
 
-/* 消息行通用样式 */
+/* 消息行：改为顶部对齐，实现头像与气泡顶部平齐 */
 .msg-row {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 10px;
 }
 /* 自己消息：整体右对齐 */
