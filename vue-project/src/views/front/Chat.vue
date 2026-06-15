@@ -13,6 +13,7 @@ const account = ref(localStorage.getItem('account')
   : {});
 const userId = Number(account.value?.id) || 0;
 
+
 // WebSocket 实例 & 地址
 let socket = null;
 const socketUrl = `ws://localhost:8080/chatServer/${userId}`;
@@ -54,6 +55,8 @@ onMounted(async () => {
   if (currentFriendId.value) {
     await loadFriendAndHistory(currentFriendId.value);
   }
+
+  loadFriendAndHistory(currentFriendId.value)
   getChatHistory()
 
   // 初始化 WebSocket
@@ -61,33 +64,31 @@ onMounted(async () => {
 });
 
 // 监听路由切换（新id自动切换聊天）
-watch(
-  () => route.query.id,
-  async (newId) => {
-    if (!newId) {
-      currentFriendId.value = null;
-      currentFriend.value = null;
-      messages.value = [];
-      return;
-    }
-    const fid = Number(newId);
-    if (!isNaN(fid)) {
-      currentFriendId.value = fid;
-      await loadFriendAndHistory(fid);
-    }
-  }
-);
+// watch(
+//   () => route.query.id,
+//   async (newId) => {
+//     if (!newId) {
+//       currentFriendId.value = null;
+//       currentFriend.value = null;
+//       messages.value = [];
+//       return;
+//     }
+//     const fid = Number(newId);
+//     if (!isNaN(fid)) {
+//       currentFriendId.value = fid;
+//       await loadFriendAndHistory(fid);
+//     }
+//   }
+// );
 
 // 根据用户ID 加载用户信息 + 历史聊天记录
 const loadFriendAndHistory = async (fid) => {
   try {
     // 1. 获取对方用户信息
-    const userRes = await axios.get(`/chat/user/${fid}`);
-    if (userRes.data.code === 200) {
-      currentFriend.value = userRes.data.data;
-    }
-
-    
+    const userRes = await request.get(`/chat/user/${fid}`);
+    currentFriend.value = userRes.data;
+    console.log('currentFriend.value:',currentFriend.value)
+    console.log('userRes:',userRes)
 
     // 3. 标记消息为已读
     await readMessage(fid);
@@ -140,6 +141,7 @@ const getFriendList = async () => {
     const res = await axios.get("/chat/user");
     if (res.data.code === 200) {
       friendList.value = res.data.data;
+      console.log('friendList.value',friendList.value)
     }
   } catch (err) {
     console.error("获取好友列表失败：", err);
@@ -286,22 +288,26 @@ const getChatHistory=async() => {
 
       <!-- 聊天内容区 -->
       <div id="chat-box" class="chat-content">
-        <div class="msg-item" v-for="msg in messages" :key="msg.id || msg.time">
-          <!-- 自己发出的消息 -->
-          <div class="self-msg" v-if="msg.fromUserId === userId">
-            <div class="msg-text">
-              {{ msg.text }}
-              <div class="msg-time">{{ msg.time }}</div>
+          <div class="msg-item" v-for="msg in messages" :key="msg.id || msg.time">
+            <!-- 自己发出的消息：消息气泡居右，头像在气泡右侧 -->
+            <div v-if="msg.fromUserId === userId" class="self-msg">
+              <div class="msg-text">{{ msg.text }}
+                <div class="msg-time">{{ msg.time }}</div>
+              </div>
+                <!-- 当前登录用户头像 -->
+              <img class="msg-avatar" :src="account.avatarUrl || ''" alt="我的头像" />
+            </div>
+            
+            <!-- 对方消息：头像在气泡左侧 -->
+            <div v-else class="other-msg-wrap">
+              <!-- 对方用户头像 -->
+              <img class="msg-avatar" :src="currentFriend.avatarUrl || ''" alt="对方头像" />
+              <div class="msg-text">
+                {{ msg.text }}
+                <div class="msg-time">{{ msg.time }}</div>
+              </div>
             </div>
           </div>
-          <!-- 对方消息 -->
-          <div class="other-msg" v-else>
-            <div class="msg-text">
-              {{ msg.text }}
-              <div class="msg-time">{{ msg.time }}</div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- 输入区域 -->
@@ -406,16 +412,41 @@ const getChatHistory=async() => {
   overflow-y: auto;
   background: #fff;
 }
+
+.chat-input {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  border-top: 1px solid #e5e6eb;
+}
+
 .msg-item {
   margin-bottom: 16px;
 }
+/* 自身消息容器：右对齐，头像在右侧 */
+
 .self-msg {
   display: flex;
-  justify-content: flex-end;
+  align-items: flex-end;
+  flex-direction: row-reverse; /* 颠倒顺序：头像在后，气泡在前 */
+  gap: 8px;
+}
+/* 对方消息容器：左对齐，头像在左侧 */
+.other-msg-wrap {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
 }
 .other-msg {
   display: flex;
-  justify-content: flex-start;
+}
+/* 头像通用样式 */
+.msg-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 .msg-text {
   max-width: 60%;
@@ -436,12 +467,5 @@ const getChatHistory=async() => {
   opacity: 0.7;
   margin-top: 4px;
   text-align: right;
-}
-
-.chat-input {
-  display: flex;
-  align-items: center;
-  padding: 15px;
-  border-top: 1px solid #e5e6eb;
 }
 </style>
