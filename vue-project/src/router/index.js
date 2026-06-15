@@ -147,6 +147,14 @@ const routes = [
           title: '我的订单'
         }
       },
+      {
+        path: 'chat',
+        name: 'FrontChat',
+        component: () => import('../views/front/Chat.vue'),
+        meta: {
+          title: '在线聊天'
+        }
+      },
     ]
   },
   //下面都是后台路由

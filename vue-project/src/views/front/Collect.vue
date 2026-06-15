@@ -82,7 +82,7 @@ const cancelCollect = (id) => {
                 <el-icon><StarFilled /></el-icon>
                 取消收藏
               </button>
-              <button class="btn" v-if="item.status !== '已售出'" @click="goChat">
+              <button class="btn" v-if="item.status !== '已售出'" @click="router.push('/front/chat?id='+item.userId)">
                 我想要
               </button>
             </div>
