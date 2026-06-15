@@ -6,99 +6,120 @@ import request from "@/utils/request.js";
 
 const route = useRoute();
 
-//当前登录的用户
-const account=ref(
-    localStorage.getItem('account')?JSON.parse(localStorage.getItem('account')):{}
-)
-const my=reactive({})
-//获取用户信息
-const getAccount=()=>{
-  request.get('/web/userInfo').then(res=>{
-    if(res.code==='200'&&res.data){
-      my.value = res.data
-      console.log('my.value:',my.value)
-    }else{
-      ElMessage.error(res.msg)
-    }
-  })
-}
+// 个人信息
+const my = reactive({});
+// 当前登录用户ID（全局使用）
+const userId = ref("");
 
-
-const userId = Number(account.value?.id) || 0;
-
-
-// WebSocket 实例 & 地址
-let socket = null;
-const socketUrl = `ws://localhost:8080/chatServer/${userId}`;
-
-// 全局状态
+// 聊天相关状态
 const friendList = ref([]);
-const currentFriendId = ref(null);
-const currentFriend = ref(null);
+const currentFriendId = ref(null); // 当前聊天对象ID
+const currentFriend = ref(null);   // 当前聊天对象信息
 const messages = ref([]);
-const text = ref('');
+const text = ref("");
 
-// 格式化时间 → 适配后端 String 类型 time
+// WebSocket 相关
+let socket = null;
+let socketUrl = "";
+// 标记是否手动关闭连接（避免页面正常关闭触发重连）
+let isManualClose = false;
+
+// 格式化时间
 const formatTime = () => {
   const now = new Date();
-  return `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+  const pad = (num) => num.toString().padStart(2, "0");
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 };
 
-// 页面初始化
-onMounted(async () => {
-  if (!userId) {
-    ElMessage.warning("请先登录");
-    return;
-  }
-  console.log('account:',account)
-  getAccount()
-
-  // 解析路由参数，自动设置聊天对象
-  const targetIdStr = route.query.id;
-  if (targetIdStr) {
-    const targetId = Number(targetIdStr);
-    if (!isNaN(targetId)) {
-      currentFriendId.value = targetId;
-      console.log("✅ 路由自动选中聊天ID：", targetId);
-    }
-  }
-
-  // 加载好友列表
-  await getFriendList();
-
-  // 有聊天对象则加载用户信息 + 历史记录
-  if (currentFriendId.value) {
-    await loadFriendAndHistory(currentFriend.id);
-  }
-
-  loadFriendAndHistory(currentFriend.id)
-  getChatHistory()
-
-  // 初始化 WebSocket
-  initWebSocket();
-});
-
-// 根据用户ID 加载用户信息 + 历史聊天记录
-const loadFriendAndHistory = async (fid) => {
+// 获取当前登录用户信息
+const getAccount = async () => {
   try {
-    // 1. 获取对方用户信息
-    const userRes = await request.get(`/chat/user/${fid}`);
-    currentFriend.value = userRes.data;
-    console.log('currentFriend.value:',currentFriend.value)
-    console.log('userRes:',userRes)
+    const res = await request.get("/web/userInfo");
+    if (res.code === "200" && res.data) {
+      // reactive 无需 .value 赋值
+      Object.assign(my, res.data);
+      userId.value = my.id;
+      return true;
+    } else {
+      ElMessage.error(res.msg || "获取个人信息失败");
+      return false;
+    }
+  } catch (err) {
+    console.error("获取用户信息异常：", err);
+    ElMessage.error("网络异常，获取个人信息失败");
+    return false;
+  }
+};
 
-    // 3. 标记消息为已读
+// 获取好友列表
+const getFriendList = async () => {
+  try {
+    const res = await request.get("/chat/user");
+    friendList.value = res.data || [];
+  } catch (err) {
+    console.error("获取好友列表失败：", err);
+  }
+};
+
+// 标记消息已读
+const readMessage = async (toUserId) => {
+  if (!userId.value || !toUserId) return;
+  try {
+    await request.get("/chat/clear", {
+      params: {
+        fromUserId: userId.value,
+        toUserId: toUserId
+      }
+    });
+    // 标记已读后刷新好友列表，更新未读数
+    await getFriendList();
+  } catch (err) {
+    console.error("标记已读失败：", err);
+  }
+};
+
+// 加载好友信息 + 历史聊天记录
+const loadFriendAndHistory = async (fid) => {
+  if (!fid) return;
+  try {
+    // 加载对方用户信息
+    const userRes = await request.get(`/chat/user/${fid}`);
+    currentFriend.value = userRes.data || {};
+    currentFriendId.value = Number(fid);
+
+    // 加载聊天历史
+    await getChatHistory();
+    // 标记消息为已读
     await readMessage(fid);
-    getFriendList();
   } catch (err) {
     console.error("加载聊天数据失败：", err);
+    ElMessage.error("加载聊天信息异常");
+  }
+};
+
+// 获取聊天历史记录
+const getChatHistory = async () => {
+  if (!userId.value || !currentFriendId.value) return;
+  try {
+    const res = await request.get("/chat/messagehistory", {
+      params: {
+        fromUserId: userId.value,
+        toUserId: currentFriendId.value
+      }
+    });
+    messages.value = res.data || [];
+    await nextTick(scrollToBottom);
+  } catch (err) {
+    console.error("加载聊天记录失败：", err);
+    ElMessage.error("加载聊天记录异常");
   }
 };
 
 // 初始化 WebSocket
 const initWebSocket = () => {
-  // 防止重复创建连接
+  // 已存在正常连接，不再重复创建
   if (socket && socket.readyState === WebSocket.OPEN) return;
+  isManualClose = false;
 
   socket = new WebSocket(socketUrl);
 
@@ -108,66 +129,46 @@ const initWebSocket = () => {
 
   socket.onerror = (err) => {
     console.error("❌ WebSocket 异常：", err);
-    ElMessage.error("聊天服务连接失败，请刷新页面");
+    ElMessage.error("聊天服务连接失败，请刷新页面重试");
   };
 
-  // 接收后端推送的消息
+  // 接收服务端推送消息
   socket.onmessage = async (event) => {
-    console.log("📥 收到服务端消息：", event.data);
-    const res = JSON.parse(event.data);
-    messages.value.push(res);
-    await nextTick();
-    scrollToBottom();
+    try {
+      const res = JSON.parse(event.data);
+      messages.value.push(res);
+      await nextTick(scrollToBottom);
 
-    // 收到对方消息自动标为已读
-    if (res.fromUserId === currentFriendId.value) {
-      await readMessage(res.fromUserId);
-      getFriendList();
+      // 收到当前聊天对象消息，自动标为已读并刷新未读数
+      if (res.fromUserId === currentFriendId.value) {
+        await readMessage(res.fromUserId);
+      }
+    } catch (err) {
+      console.error("解析消息失败：", err);
     }
   };
 
   socket.onclose = () => {
     console.log("🔌 WebSocket 连接关闭");
     socket = null;
+    // 非手动关闭，简单重连尝试
+    if (!isManualClose) {
+      setTimeout(() => {
+        initWebSocket();
+      }, 3000);
+    }
   };
 };
 
-// 获取好友列表
-const getFriendList = async () => {
-  try {
-    const res = await request.get("/chat/user");
-    console.log('getFriendList res:', res)
-    friendList.value = res.data;
-    console.log('friendList.value',friendList.value)
-
-  } catch (err) {
-    console.error("获取好友列表失败：", err);
-  }
-};
-
-// 左侧点击好友切换聊天
+// 切换聊天好友
 const selectFriend = async (friend) => {
-  currentFriendId.value = Number(friend.id);
-  text.value = '';
-  await loadFriendAndHistory(currentFriendId.value);
+  if (!friend?.id) return;
+  text.value = "";
+  await loadFriendAndHistory(friend.id);
 };
 
-// 标记消息已读（对接后端 /chat/clear）
-const readMessage = async (toUserId) => {
-  try {
-    await request.get("/chat/clear", {
-      params: {
-        fromUserId: userId,
-        toUserId: toUserId
-      }
-    });
-  } catch (err) {
-    console.error("标记已读失败：", err);
-  }
-};
-
-// 发送消息（严格对齐 Chat 实体）
-const send = () => {
+// 发送消息（方案B：WebSocket + 后端接口双上报）
+const send = async () => {
   const content = text.value.trim();
   if (!content) {
     ElMessage.warning("请输入消息内容");
@@ -182,32 +183,35 @@ const send = () => {
     return;
   }
 
-  // 组装数据：和后端 Chat 实体 100% 匹配
   const sendData = {
     text: content,
-    type: "text",       // 文本类型消息
-    time: formatTime(), // 字符串格式时间
-    fromUserId: userId,
+    type: "text",
+    time: formatTime(),
+    fromUserId: userId.value,
     toUserId: currentFriendId.value,
     isRead: false
   };
 
-  console.log("📤 发送消息：", sendData);
-
-  // 本地即时渲染自己的消息
+  // 本地渲染消息
   messages.value.push(sendData);
-  // WebSocket 发送到后端
+  // WebSocket 推送
   socket.send(JSON.stringify(sendData));
-  request.post("/chat",sendData).then(res=>{
-    if(res.code==='200'){
-      ElMessage.success("发送成功")
-    }else{
-      ElMessage.error("发送失败")
+
+  // 后端接口入库
+  try {
+    const res = await request.post("/chat", sendData);
+    if (res.code === "200") {
+      ElMessage.success("发送成功");
+    } else {
+      ElMessage.error(res.msg || "发送失败");
     }
-  })
+  } catch (err) {
+    console.error("消息入库请求失败：", err);
+    ElMessage.error("消息发送异常");
+  }
 
   // 清空输入框 + 滚动到底部
-  text.value = '';
+  text.value = "";
   nextTick(scrollToBottom);
 };
 
@@ -219,35 +223,44 @@ const scrollToBottom = () => {
   }
 };
 
-// 页面销毁关闭连接
+// 页面初始化
+onMounted(async () => {
+  // 1. 优先获取个人信息，拿到 userId
+  const hasUser = await getAccount();
+  if (!hasUser) return;
+
+  // 2. 动态拼接 WebSocket 地址（适配本地/线上环境）
+  const { protocol, host } = window.location;
+  const wsProtocol = protocol === "https:" ? "wss:" : "ws:";
+  socketUrl = `${wsProtocol}//${host}/chatServer/${my.id}`;
+
+  // 3. 初始化 WebSocket 连接
+  initWebSocket();
+
+  // 4. 加载好友列表
+  await getFriendList();
+
+  // 5. 解析路由参数，自动打开聊天
+  const targetIdStr = route.query.id;
+  if (targetIdStr) {
+    const targetId = Number(targetIdStr);
+    if (!isNaN(targetId)) {
+      console.log("✅ 路由自动选中聊天ID：", targetId);
+      await loadFriendAndHistory(targetId);
+    }
+  }
+});
+
+// 页面销毁，主动关闭 WebSocket
 onBeforeUnmount(() => {
+  isManualClose = true;
   if (socket) {
     socket.close();
     socket = null;
   }
 });
-
-const getChatHistory=async() => {
-  try {
-    const res = await request.get("/chat/messagehistory", {
-      params: {
-        fromUserId: userId,
-        toUserId: currentFriendId.value
-      }
-    });
-    console.log('res',res)
-    // 接口返回的聊天列表
-    console.log("聊天记录", res.data);
-    // 赋值给消息列表，渲染到页面
-    messages.value = res.data;
-    // 滚动到底部
-    await nextTick(scrollToBottom);
-  } catch (err) {
-    console.error("加载聊天记录失败", err);
-    ElMessage.error("加载记录异常");
-  }
-}
 </script>
+
 <template>
   <div class="chat-container">
     <!-- 左侧好友列表 -->
@@ -272,7 +285,7 @@ const getChatHistory=async() => {
 
     <!-- 右侧聊天区域 -->
     <div class="chat-main">
-      <div class="chat-header" v-if="currentFriend">
+      <div class="chat-header" v-if="currentFriend?.nickname">
         正在和 {{ currentFriend.nickname }} 聊天
       </div>
       <div class="chat-header empty" v-else-if="currentFriendId">
@@ -284,7 +297,7 @@ const getChatHistory=async() => {
 
       <!-- 聊天内容区 -->
       <div id="chat-box" class="chat-content">
-        <div class="msg-item" v-for="msg in messages" :key="msg.id || msg.time">
+        <div class="msg-item" v-for="msg in messages" :key="msg.id ?? msg.time">
           <!-- 自己的消息：整体靠右 | 气泡在左，头像在右 -->
           <div v-if="msg.fromUserId === userId" class="msg-row self-row">
             <div class="msg-bubble self-bubble">
@@ -296,7 +309,11 @@ const getChatHistory=async() => {
 
           <!-- 对方消息：整体靠左 | 头像在左，气泡在右 -->
           <div v-else class="msg-row other-row">
-            <img class="msg-avatar" :src="currentFriend.avatarUrl || '/default-avatar.png'" alt="头像" />
+            <img 
+              class="msg-avatar" 
+              :src="currentFriend?.avatarUrl || '/default-avatar.png'" 
+              alt="头像" 
+            />
             <div class="msg-bubble">
               {{ msg.text }}
               <div class="msg-time">{{ msg.time }}</div>
@@ -311,7 +328,7 @@ const getChatHistory=async() => {
           v-model="text"
           placeholder="输入消息，回车发送"
           style="flex: 1; margin-right: 10px"
-          @keyup.enter.native="send"
+          @keyup.enter="send"
         />
         <el-button type="primary" @click="send">发送</el-button>
       </div>
