@@ -68,6 +68,14 @@ const toConfirm = () => {
   })
 }
 
+// 跳转到聊天页面
+const goToChat = (targetId) => {
+  router.push({
+    path: '/front/chat',
+    query: { id: targetId }
+  })
+}
+
 onMounted(() => {
     loadGoods()
     request.post('/goods/addView/' + id.value)
@@ -151,7 +159,7 @@ onMounted(() => {
                 <div v-if="goods.status==='已售出'" style="font-weight: bolder;font-size:large;color:#ff4500;" >
                     卖掉了
                 </div>
-                <button v-if="goods.status==='上架'">
+                <button v-if="goods.status==='上架'" @click="goToChat(user.id)">
                     聊一聊
                 </button>
                 <button @click="toConfirm" v-if="goods.status==='上架'" >
