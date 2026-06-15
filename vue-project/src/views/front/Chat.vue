@@ -163,7 +163,6 @@ const send = () => {
     ElMessage.warning("请输入消息内容");
     return;
   }
-  // 关键：只要 currentFriendId 有数字就允许发送
   if (!currentFriendId.value || isNaN(currentFriendId.value)) {
     ElMessage.warning("请先选择聊天对象");
     return;
@@ -182,8 +181,20 @@ const send = () => {
   };
 
   console.log("📤 发送消息：", sendData);
+
+  // ========== 关键：本地立刻添加自己的消息，不用等服务器 ==========
+  messages.value.push(sendData);
+
+  // 发送给服务器
   socket.send(JSON.stringify(sendData));
+
+  // 清空输入
   text.value = '';
+
+  // 滚动到底部
+  nextTick(() => {
+    scrollToBottom();
+  });
 };
 
 const scrollToBottom = () => {
