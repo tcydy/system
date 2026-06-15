@@ -1,11 +1,13 @@
 <script setup>
-import { ref, onMounted, shallowRef, reactive, computed } from 'vue'
+import { ref, onMounted, shallowRef, reactive, computed, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage, ElMessageBox } from "element-plus";
 import request from '@/utils/request.js';
 import { regionData } from "element-china-area-data";
 import { Delete, Edit, UploadFilled } from "@element-plus/icons-vue";
 import { Editor,Toolbar } from "@wangeditor/editor-for-vue";
+// 关键：导入富文本基础样式，解决高度计算错乱
+import '@wangeditor/editor/dist/css/style.css'
 import axios from 'axios'
 
 const route = useRoute()
@@ -118,13 +120,12 @@ const form = ref({})
 // 单图、多图
 const imgList = ref([])
 
-// 编辑
-const handleEdit = (item) => {
+// 编辑（增加nextTick刷新编辑器，解决弹窗渲染高度计算异常）
+const handleEdit = async (item) => {
     form.value = item;
 
     // 多图列表处理
     if (form.value.imgList) {
-        // 这里也顺便加个类型判断，避免imgList不是字符串时报错
         imgList.value = typeof form.value.imgList === 'string' 
         ? form.value.imgList.split(',') 
         : [];
@@ -136,14 +137,11 @@ const handleEdit = (item) => {
 
     // 重点修复：place 字段的处理
     if (form.value.place) {
-        // 只有当它是字符串时，才执行 split
         if (typeof form.value.place === 'string') {
         form.value.place = form.value.place.split('/');
         } else if (Array.isArray(form.value.place)) {
-        // 如果已经是数组，直接赋值，不做处理
         form.value.place = form.value.place;
         } else {
-        // 其他类型（数字、对象等）直接设为空数组
         form.value.place = [];
         }
     } else {
@@ -151,14 +149,17 @@ const handleEdit = (item) => {
     }
 
     dialogFormVisible.value = true;
+    // 等待弹窗DOM渲染完成，刷新编辑器尺寸
+    await nextTick()
+    if (editorRefContent.value) {
+      editorRefContent.value.refresh()
+    }
 };
 
 //保存
 const save=()=>{
-
   if(imgList.value.length>0){
     form.value.imgList=imgList.value.join(',');
-
   }else{
     form.value.imgList='';
   }
@@ -174,7 +175,7 @@ const save=()=>{
     if(res.code==='200'){
       ElMessage.success("保存成功")
       dialogFormVisible.value=false
-      load()
+      loadGoods()
     }else{
       ElMessage.error("保存失败")
     }
@@ -238,7 +239,6 @@ const removeImgList = (index) => {
 const isSelf = computed(() => {
   return person.id && user.value.id && person.id == user.value.id
 })
-
 
 // 页面初始化
 onMounted(async () => {
@@ -360,170 +360,141 @@ onMounted(async () => {
     </div>
   </div>
 
-  <!-- 编辑弹窗：修复所有语法错误 -->
-  <!-- 表单对话框 -->
-    <el-dialog
+  <!-- 编辑弹窗 -->
+  <el-dialog
     v-model="dialogFormVisible"
-    :title="编辑"
+    title="编辑"
     width="70%"
     destroy-on-close
     center
-    >
-        <el-form :model="form" label-width="100px">
-            <el-form-item label="商品名称" required>
-                <el-input v-model="form.name" placeholder="请输入" />
-            </el-form-item>
+    class="goods-edit-dialog"
+  >
+    <el-form :model="form" label-width="100px" class="goods-form">
+      <el-form-item label="商品名称" required>
+        <el-input v-model="form.name" placeholder="请输入" />
+      </el-form-item>
 
-            <el-form-item label="图片上传">
-            <div class="upload-container">
-                <el-avatar v-if="form.img" :src="form.img" :size="80" />
-                <el-upload
-                :action="`${serverHost}/web/upload`"
-                :on-success="handleImgUploadSuccess"
-                :on-error="handleImgUploadFail"
-                :show-file-list="false"
-                >
-                <el-button type="primary" :icon="UploadFilled">
-                    {{ form.img ? '更换图片' : '上传图片' }}
-                </el-button>
-                </el-upload>
+      <el-form-item label="图片上传">
+        <div class="upload-container">
+          <el-avatar v-if="form.img" :src="form.img" :size="80" />
+          <el-upload
+            :action="`${serverHost}/web/upload`"
+            :on-success="handleImgUploadSuccess"
+            :on-error="handleImgUploadFail"
+            :show-file-list="false"
+          >
+            <el-button type="primary" :icon="UploadFilled">
+              {{ form.img ? '更换图片' : '上传图片' }}
+            </el-button>
+          </el-upload>
+        </div>
+      </el-form-item>
+
+      <!-- 多图组件上传 -->
+      <el-form-item label="多张图片">
+        <div class="upload-container">
+          <div class="image-list" v-if="imgList.length > 0">
+            <div
+              v-for="(img, index) in imgList"
+              :key="index"
+              class="image-item"
+            >
+              <el-avatar :src="img" :size="80" />
+              <el-button
+                type="danger"
+                circle
+                :icon="Delete"
+                class="delete-btn"
+                @click="removeImgList(index)"
+              />
             </div>
-            </el-form-item>
+          </div>
+          <el-upload
+            :action="`${serverHost}/web/upload`"
+            :on-success="handleImgListUploadSuccess"
+            :on-error="handleImgListUploadFail"
+            :show-file-list="false"
+            multiple
+          >
+            <el-button type="primary" :icon="UploadFilled">上传图片</el-button>
+          </el-upload>
+        </div>
+      </el-form-item>
 
-            <!-- 多图组件上传 -->
-            <el-form-item label="多张图片">
-            <div class="upload-container">
-                <div class="image-list" v-if="imgList.length > 0">
-                <div
-                    v-for="(img, index) in imgList"
-                    :key="index"
-                    class="image-item"
-                >
-                    <el-avatar :src="img" :size="80" />
-                    <el-button
-                    type="danger"
-                    circle
-                    :icon="Delete"
-                    class="delete-btn"
-                    @click="removeImgList(index)"
-                    />
-                </div>
-                </div>
-                <el-upload
-                :action="`${serverHost}/web/upload`"
-                :on-success="handleImgListUploadSuccess"
-                :on-error="handleImgListUploadFail"
-                :show-file-list="false"
-                multiple
-                >
-                <el-button type="primary" :icon="UploadFilled">上传图片</el-button>
-                </el-upload>
-            </div>
-            </el-form-item>
+      <el-form-item label="分类" required>
+        <el-select v-model="form.typeId" placeholder="请选择分类" style="width: 240px">
+          <el-option
+            v-for="item in types"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
+        </el-select>
+      </el-form-item>
 
-            <el-form-item label="分类" required>
-            <el-select v-model="form.typeId" placeholder="Select" style="width: 240px">
-                <el-option
-                v-for="item in types"
-                :key="item.id"
-                :label="item.name"
-                :value="item.id"
-                />
-            </el-select>
-            </el-form-item>
+      <el-form-item label="售价" required>
+        <el-input v-model="form.price" type="number" placeholder="请输入" />
+      </el-form-item>
 
-            <el-form-item label="售价" required>
-            <el-input v-model="form.price" type="number" placeholder="请输入" />
-            </el-form-item>
+      <el-form-item label="原价" required>
+        <el-input v-model="form.rePrice" type="number" placeholder="请输入" />
+      </el-form-item>
 
-            <el-form-item label="原价" required>
-            <el-input v-model="form.rePrice" type="number" placeholder="请输入" />
-            </el-form-item>
+      <!-- 富文本编辑：外层100%宽度容器 -->
+      <el-form-item label="详情">
+        <div class="editor-full-box">
+          <div class="editor-wrap">
+            <Toolbar
+              :editor="editorRefContent"
+              :default-config="editorConfig"
+              mode="default"
+            />
+            <Editor
+              v-model="htmlContent"
+              :default-config="editorConfig"
+              mode="default"
+              @onCreated="editorRefContent=$event"
+            />
+          </div>
+        </div>
+      </el-form-item>
 
-            <!-- 富文本编辑 -->
-            <el-form-item label="详情">
-                <div style="border:1px solid #ccc;z-index:100">
-                    <Toolbar
-                    style="border-bottom:1px solid #ccc"
-                    :editor="editorRefContent"
-                    :default-config="editorConfig"
-                    mode="default"
-                    />
-                    <Editor
-                    style="height:300px; overflow-y: hidden;"
-                    v-model="htmlContent"
-                    :default-config="editorConfig"
-                    mode="default"
-                    @onCreated="editorRefContent=$event"
-                    />
-                </div>
-            </el-form-item>
+      <el-form-item label="所在城市">
+        <el-cascader
+          v-model="form.place"
+          :options="regionData"
+          :props="{value:'label'}"
+          placeholder="请选择省市区"
+          clearable
+          style="width:100%"
+        />
+      </el-form-item>
 
-            <el-form-item label="所在城市">
-                <el-cascader
-                    v-model="form.place"
-                    :options="regionData"
-                    :props="{value:'label'}"
-                    placeholder="请选择省市区"
-                    clearable
-                    style="width:100%"
-                />
-            </el-form-item>
+      <el-form-item label="发货设置">
+        <el-radio-group v-model="form.shipment">
+          <el-radio value="包邮">包邮</el-radio>
+          <el-radio value="不包邮">不包邮</el-radio>
+        </el-radio-group>
+      </el-form-item>
 
-            <el-form-item label="发货设置">
-                <el-radio-group v-model="form.shipment">
-                    <el-radio value="包邮">包邮</el-radio>
-                    <el-radio value="不包邮">不包邮</el-radio>
-                </el-radio-group>
-            </el-form-item>
+      <el-form-item label="成色">
+        <el-radio-group v-model="form.quality">
+          <el-radio value="全新">全新</el-radio>
+          <el-radio value="九成新">九成新</el-radio>
+          <el-radio value="八成新">八成新</el-radio>
+          <el-radio value="七成新">七成新</el-radio>
+          <el-radio value="六成新及以下">六成新及以下</el-radio>
+        </el-radio-group>
+      </el-form-item>
+    </el-form>
 
-            <!-- 重复的售价表单项，保留原样 -->
-            <el-form-item label="售价" required>
-                <el-input v-model="form.price" type="number" placeholder="请输入" />
-            </el-form-item>
-
-            <el-form-item label="用户" required>
-                <el-select v-model="form.userId" placeholder="Select" style="width: 240px">
-                    <el-option
-                    v-for="item in users"
-                    :key="item.id"
-                    :label="item.nickname"
-                    :value="item.id"
-                    />
-                </el-select>
-            </el-form-item>
-
-            <el-form-item label="状态" required>
-                <el-input v-model="form.status" placeholder="请输入" />
-            </el-form-item>
-
-            <el-form-item label="成色">
-                <el-radio-group v-model="form.quality">
-                    <el-radio value="全新">全新</el-radio>
-                    <el-radio value="九成新">九成新</el-radio>
-                    <el-radio value="八成新">八成新</el-radio>
-                    <el-radio value="七成新">七成新</el-radio>
-                    <el-radio value="六成新及以下">六成新及以下</el-radio>
-                </el-radio-group>
-            </el-form-item>
-
-            <el-form-item label="日期">
-                <el-date-picker
-                    v-model="form.date"
-                    type="date"
-                    value-format="YYYY-MM-DD"
-                    placeholder="选择日期"
-                />
-            </el-form-item>
-        </el-form>
-
-        <template #footer>
-            <div class="dialog-footer">
-            <el-button @click="dialogFormVisible = false">取消</el-button>
-            <el-button type="primary" @click="save">确定</el-button>
-            </div>
-        </template>
-    </el-dialog>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="dialogFormVisible = false">取消</el-button>
+        <el-button type="primary" @click="save">确定</el-button>
+      </div>
+    </template>
+  </el-dialog>
 </template>
 
 <style scoped>
@@ -560,8 +531,6 @@ onMounted(async () => {
 
 .mask-img {
   position: absolute;
-  top: 0;
-  left: 0;
   top: 80px;
   left: 50px;
   width: 120px;
@@ -595,4 +564,66 @@ onMounted(async () => {
   transform:scale(0.8);
 }
 
+/* 弹窗表单通用样式 */
+:deep(.goods-edit-dialog .el-dialog__body) {
+  padding: 24px 30px;
+}
+:deep(.goods-form .el-form-item) {
+  margin-bottom: 22px;
+}
+:deep(.goods-form .el-form-item__label) {
+  font-size: 14px;
+  color: #303133;
+}
+:deep(.goods-form .el-input__inner,
+.goods-form .el-select .el-input__inner,
+.goods-form .el-cascader__inner,
+.goods-form .el-date-editor .el-input__inner) {
+  height: 40px;
+  font-size: 14px;
+}
+:deep(.goods-form .el-radio-group) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* 富文本核心修复样式：消除高度警告、铺满宽度、横向工具栏 */
+.editor-full-box {
+  width: 100%;
+}
+.editor-wrap {
+  width: 100%;
+  border: 1px solid #dcdcdc;
+  border-radius: 6px;
+  overflow: hidden;
+}
+/* 工具栏强制横向排列，禁止竖排 */
+:deep(.editor-wrap .w-e-toolbar) {
+  width: 100% !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  flex-direction: row !important;
+}
+/* 编辑滚动容器最小高度320px，消除 <300px 警告 */
+:deep(.editor-wrap .w-e-scroll) {
+  min-height: 320px !important;
+  max-height: 500px;
+  width: 100% !important;
+  overflow-y: auto;
+}
+:deep(.editor-wrap .w-e-text) {
+  width: 100% !important;
+  min-height: 320px;
+}
+
+.upload-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.dialog-footer {
+  text-align: right;
+}
 </style>
