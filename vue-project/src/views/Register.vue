@@ -22,7 +22,8 @@ const roleOptions=[
 
 //注册表单
 const registerForm=reactive({
-  username:'',
+  username: '',
+  nickname:'',
   password:'',
   confirmPassword:'',
   role:'ROLE_USER'//默认选择普通用户
@@ -35,6 +36,10 @@ const isallow=ref(true)
 const rules={
   username:[
     {required:true,message:'请输入用户名',trigger:'blur'},
+    {min:3,max:10,message: '长度在3到10个字符',trigger: 'blur'}
+  ],
+  nickname:[
+    {required:true,message:'请输入昵称',trigger:'blur'},
     {min:3,max:10,message: '长度在3到10个字符',trigger: 'blur'}
   ],
   password:[
@@ -68,7 +73,8 @@ const register=()=>
 
       //创建一个不包含确认密码的对象
       const registerDate={
-        username:registerForm.username,
+        username: registerForm.username,
+        nickname: registerForm.nickname,
         password:registerForm.password,
         role:registerForm.role
       }
@@ -156,6 +162,15 @@ const register=()=>
                   size="large"
                   :prefix-icon="User"
                   v-model="registerForm.username">
+              </el-input>
+            </el-form-item>
+
+            <el-form-item prop="nickname">
+              <el-input
+                  placeholder="请输入昵称"
+                  size="large"
+                  :prefix-icon="User"
+                  v-model="registerForm.nickname">
               </el-input>
             </el-form-item>
 

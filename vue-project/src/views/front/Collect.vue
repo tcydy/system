@@ -3,8 +3,9 @@ import { reactive, ref } from "vue";
 import request from "@/utils/request.js";
 import { Star, StarFilled } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus'
+import { useRoute, useRouter } from 'vue-router';
 
-
+const router = useRouter()
 const searchForm = reactive({ keyword: '' });
 const tableData = ref([]);
 const total = ref(0);
@@ -65,13 +66,15 @@ const cancelCollect = (id) => {
         <el-card style="border-radius: 10px" class="card-hover-up">
 
           <div class="img-box">
-            <div style="width: 100%; height: 220px" v-if="item.status!=='已售出'">
-              <img :src="item.img" style="width:100%;height:100%;object-fit:fill;">
-            </div>
-            <div style="width:100%;height:220px;position:relative" v-else>
-              <div class="overlay"></div>
-              <img src="../../assets/已售出.png" class="overlay-img">
-              <img :src="item.img" style="width:100%;height:100%;object-fit:fill;">
+            <div @click="router.push('/front/goodsDetail?id=' + item.id)" style="cursor: pointer;">
+              <div style="width: 100%; height: 220px" v-if="item.status!=='已售出'">
+                <img :src="item.img" style="width:100%;height:100%;object-fit:fill;">
+              </div>
+              <div style="width:100%;height:220px;position:relative" v-else>
+                <div class="overlay"></div>
+                <img src="../../assets/已售出.png" class="overlay-img">
+                <img :src="item.img" style="width:100%;height:100%;object-fit:fill;">
+              </div>
             </div>
 
             <div class="action-bar">

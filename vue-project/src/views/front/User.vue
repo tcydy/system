@@ -262,7 +262,8 @@ onMounted(async () => {
           <h2>{{ user.nickname }}</h2>
         </div>
         <div style="display: flex;align-items:center;">
-          <el-button type="primary" size="large">去私聊</el-button>
+          <el-button v-if="!isSelf" type="primary" size="large">去私聊</el-button>
+          <el-button v-if="isSelf" type="primary" size="large" @click="router.push('/front/person')">编辑资料</el-button>
         </div>
       </div>
     </el-card>
@@ -324,7 +325,6 @@ onMounted(async () => {
         <div style="border: 1px solid #ececec;min-height: 80px;width: 100%;padding: 20px;">
           <div style="display: flex; flex-direction: column; gap: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px;">
-              <!-- 恢复 @click 跳转事件 -->
               <div 
                 style="display: flex; align-items: center; gap: 12px;cursor: pointer;" 
                 @click="gotoUser(order.toId)"

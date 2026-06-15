@@ -19,6 +19,7 @@
     "@wangeditor/editor": "^5.1.23",
     "@wangeditor/editor-for-vue": "^5.1.12",
     "axios": "^1.12.2",
+    "echarts": "^6.1.0",
     "element-china-area-data": "^6.1.0",
     "element-plus": "^2.11.4",
     "sass": "^1.93.2",

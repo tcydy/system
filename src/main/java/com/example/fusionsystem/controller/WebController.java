@@ -63,14 +63,13 @@ public class WebController {
     @PostMapping("/register")
     public Result register(@RequestBody Account account){
         /*进行判空，若起那段有少发的内容则告诉前端，并不执行操作*/
-        //判断用户名和密码是否为空
-        if(StrUtil.isEmpty(account.getUsername())||StrUtil.isEmpty(account.getPassword())){
-            return Result.error("605","用户名或密码不能为空");
+        //判断用户名和昵称和密码是否为空
+        if(StrUtil.isEmpty(account.getNickname())||StrUtil.isEmpty(account.getUsername())||StrUtil.isEmpty(account.getPassword())){
+            return Result.error("605","用户名、昵称或密码不能为空");
         }
         if(StrUtil.equals(account.getRole(),"ROLE_USER"))
         {
            userService.register(account);
-
         }
         if(StrUtil.equals(account.getRole(),"ROLE_ADMIN"))
         {
