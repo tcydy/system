@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onBeforeUnmount, onMounted, nextTick, reactive, watch } from "vue";
+import { ref, onBeforeUnmount, onMounted, nextTick, reactive } from "vue";
 import { ElMessage } from "element-plus";
 import { useRoute } from "vue-router";
 import request from "@/utils/request.js";
@@ -21,7 +21,6 @@ const text = ref("");
 let socket = null;
 let socketUrl = "";
 let isManualClose = false;
-// 标记WS在线状态
 const isWsOnline = ref(false);
 
 // 本地离线留言存储 key
@@ -71,7 +70,7 @@ const getAccount = async () => {
   }
 };
 
-// 获取好友列表
+// 获取好友列表（异步不阻塞渲染）
 const getFriendList = async () => {
   try {
     const res = await request.get("/chat/user");
@@ -82,19 +81,14 @@ const getFriendList = async () => {
 };
 
 // 标记消息已读
-const readMessage = async (toUserId) => {
+const readMessage = (toUserId) => {
   if (!userId.value || !toUserId) return;
-  try {
-    await request.get("/chat/clear", {
-      params: {
-        fromUserId: userId.value,
-        toUserId: toUserId
-      }
-    });
-    await getFriendList();
-  } catch (err) {
-    console.error("标记已读失败：", err);
-  }
+  request.get("/chat/clear", {
+    params: {
+      fromUserId: userId.value,
+      toUserId: toUserId
+    }
+  }).then(() => getFriendList()).catch(err => console.error("标记已读失败", err));
 };
 
 // 加载好友信息 + 历史聊天记录
@@ -104,9 +98,8 @@ const loadFriendAndHistory = async (fid) => {
     const userRes = await request.get(`/chat/user/${fid}`);
     currentFriend.value = userRes.data || {};
     currentFriendId.value = Number(fid);
-
     await getChatHistory();
-    await readMessage(fid);
+    readMessage(fid);
   } catch (err) {
     console.error("加载聊天数据失败：", err);
     ElMessage.error("加载聊天信息异常");
@@ -124,11 +117,19 @@ const getChatHistory = async () => {
       }
     });
     messages.value = res.data || [];
-    await nextTick(scrollToBottom);
+    scrollToBottom();
   } catch (err) {
     console.error("加载聊天记录失败：", err);
     ElMessage.error("加载聊天记录异常");
   }
+};
+
+// 滚动到底部（独立nextTick，保证DOM刷新后执行）
+const scrollToBottom = () => {
+  nextTick(() => {
+    const chatBox = document.getElementById("chat-box");
+    if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+  });
 };
 
 // 初始化 WebSocket
@@ -149,22 +150,24 @@ const initWebSocket = () => {
     isWsOnline.value = false;
   };
 
-  // 【核心修复】重写消息接收逻辑，区分当前聊天对象与其他用户
-  socket.onmessage = async (event) => {
+  socket.onmessage = (event) => {
     try {
-      const res = JSON.parse(event.data);
-      const sendUserId = res.fromUserId;
-      // 收到任意消息都刷新好友列表，更新未读角标
-      await getFriendList();
-
-      // 只有消息发送人是当前聊天好友，才追加到聊天记录并自动标已读
-      if (sendUserId === currentFriendId.value) {
-        messages.value.push(res);
-        await nextTick(scrollToBottom);
-        await readMessage(sendUserId);
+      const msg = JSON.parse(event.data);
+      const senderId = msg.fromUserId;
+      // 仅当前聊天好友消息渲染到聊天框
+      if (senderId === currentFriendId.value) {
+        // 消息去重
+        const hasSameMsg = messages.value.some(item => item.time === msg.time);
+        if (!hasSameMsg) {
+          messages.value.push(msg);
+          scrollToBottom();
+          readMessage(senderId);
+        }
       }
+      // 任意消息刷新好友未读数量
+      getFriendList();
     } catch (err) {
-      console.error("解析消息失败：", err);
+      console.error("解析ws消息失败", err);
     }
   };
 
@@ -172,32 +175,22 @@ const initWebSocket = () => {
     console.log("🔌 WebSocket 连接关闭");
     socket = null;
     isWsOnline.value = false;
-    if (!isManualClose) {
-      setTimeout(() => {
-        initWebSocket();
-      }, 3000);
-    }
+    if (!isManualClose) setTimeout(initWebSocket, 3000);
   };
 };
 
-// 切换聊天好友
+// 切换好友
 const selectFriend = async (friend) => {
   if (!friend?.id) return;
   text.value = "";
   await loadFriendAndHistory(friend.id);
 };
 
-// 发送消息（支持离线留言）
+// 发送消息核心：优先走WebSocket实时通道，再异步入库
 const send = async () => {
   const content = text.value.trim();
-  if (!content) {
-    ElMessage.warning("请输入消息内容");
-    return;
-  }
-  if (!currentFriendId.value) {
-    ElMessage.warning("请选择聊天对象");
-    return;
-  }
+  if (!content) return ElMessage.warning("请输入消息内容");
+  if (!currentFriendId.value) return ElMessage.warning("请选择聊天对象");
 
   const sendData = {
     text: content,
@@ -207,95 +200,77 @@ const send = async () => {
     toUserId: currentFriendId.value,
     isRead: false
   };
-
-  // 本地即时渲染自己的消息（后端不会推送消息给自己，只能本地渲染）
-  messages.value.push(sendData);
   text.value = "";
-  nextTick(scrollToBottom);
 
-  // 1. 优先调用后端接口入库（离线也能执行，依赖网络请求）
+  // 1. WS在线：优先发送WebSocket，实时推送给对方（解决实时延迟核心）
+  if (isWsOnline.value && socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify(sendData));
+  }
+
+  // 2. 同步调用后端保存消息（方案B：双逻辑同时保留）
   try {
     const res = await request.post("/chat", sendData);
     if (res.code === "200") {
-      ElMessage.success("发送成功");
-      // 接口成功，清除本地缓存
       removeLocalMsg(sendData.time);
+      // 入库成功再渲染自己消息，持久化不丢失
+      messages.value.push(sendData);
+      scrollToBottom();
+      ElMessage.success("发送成功");
     } else {
       ElMessage.error(res.msg || "发送失败");
-      // 接口失败，存入本地缓存
-      const localList = getLocalOfflineMsg();
-      localList.push(sendData);
-      saveLocalOfflineMsg(localList);
+      const list = getLocalOfflineMsg();
+      list.push(sendData);
+      saveLocalOfflineMsg(list);
     }
   } catch (err) {
-    console.error("消息请求异常，转为离线留言：", err);
-    // 网络异常，存入本地持久化缓存
-    const localList = getLocalOfflineMsg();
-    localList.push(sendData);
-    saveLocalOfflineMsg(localList);
-  }
-
-  // 2. WS在线时推送消息给对方（后端只会转发给toUserId，自己收不到推送）
-  if (isWsOnline.value && socket && socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify(sendData));
+    console.error("消息入库失败，离线缓存", err);
+    const list = getLocalOfflineMsg();
+    list.push(sendData);
+    saveLocalOfflineMsg(list);
+    // 离线临时展示，下次联网补发
+    messages.value.push(sendData);
+    scrollToBottom();
   }
 };
 
-// 聊天框滚动到底部
-const scrollToBottom = () => {
-  const chatBox = document.getElementById("chat-box");
-  if (chatBox) {
-    chatBox.scrollTop = chatBox.scrollHeight;
-  }
-};
-
-// 页面初始化
+// 页面挂载
 onMounted(async () => {
   const hasUser = await getAccount();
   if (!hasUser) return;
 
-  // 拼接WS地址
+  // 动态拼接ws地址
   const { protocol, host } = window.location;
   const wsProtocol = protocol === "https:" ? "wss:" : "ws:";
   socketUrl = `${wsProtocol}//${host}/chatServer/${my.id}`;
 
   initWebSocket();
-  await getFriendList();
+  getFriendList();
 
-  // 解析路由参数
+  // 路由参数自动打开聊天
   const targetIdStr = route.query.id;
   if (targetIdStr) {
     const targetId = Number(targetIdStr);
-    if (!isNaN(targetId)) {
-      console.log("✅ 路由自动选中聊天ID：", targetId);
-      await loadFriendAndHistory(targetId);
-    }
+    if (!isNaN(targetId)) await loadFriendAndHistory(targetId);
   }
 
-  // 页面启动后，尝试补发本地缓存中未提交的留言
+  // 补发离线缓存消息
   const offlineList = getLocalOfflineMsg();
-  if (offlineList.length > 0) {
-    for (const msg of offlineList) {
-      try {
-        const res = await request.post("/chat", msg);
-        if (res.code === "200") {
-          removeLocalMsg(msg.time);
-        }
-      } catch (err) {
-        console.log("离线留言补发失败，下次进入页面继续尝试");
-        break;
-      }
+  for (const msg of offlineList) {
+    try {
+      const res = await request.post("/chat", msg);
+      if (res.code === "200") removeLocalMsg(msg.time);
+    } catch (err) {
+      console.log("离线补发中断，下次进入重试");
+      break;
     }
   }
 });
 
-// 页面销毁，主动关闭WS
+// 页面销毁关闭ws
 onBeforeUnmount(() => {
   isManualClose = true;
-  if (socket) {
-    socket.close();
-    socket = null;
-  }
+  if (socket) socket.close();
+  socket = null;
 });
 </script>
 
@@ -335,7 +310,7 @@ onBeforeUnmount(() => {
 
       <!-- 聊天内容区 -->
       <div id="chat-box" class="chat-content">
-        <div class="msg-item" v-for="msg in messages" :key="msg.id ?? msg.time">
+        <div class="msg-item" v-for="msg in messages" :key="msg.time">
           <!-- 自己的消息 -->
           <div v-if="msg.fromUserId === userId" class="msg-row self-row">
             <div class="msg-bubble self-bubble">
@@ -346,10 +321,10 @@ onBeforeUnmount(() => {
           </div>
           <!-- 对方消息 -->
           <div v-else class="msg-row other-row">
-            <img 
-              class="msg-avatar" 
-              :src="currentFriend?.avatarUrl || '/default-avatar.png'" 
-              alt="头像" 
+            <img
+              class="msg-avatar"
+              :src="currentFriend?.avatarUrl || '/default-avatar.png'"
+              alt="头像"
             />
             <div class="msg-bubble">
               {{ msg.text }}
