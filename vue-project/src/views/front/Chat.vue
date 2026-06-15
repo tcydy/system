@@ -1,76 +1,127 @@
 <script setup>
-import { ref, onBeforeUnmount, onMounted, nextTick } from "vue";
+import { ref, onBeforeUnmount, onMounted, nextTick, watch } from "vue";
 import axios from "axios";
 import { ElMessage } from "element-plus";
+import { useRoute } from "vue-router";
 
-// 当前登录用户信息
-const account = ref(localStorage.getItem('account') 
-  ? JSON.parse(localStorage.getItem('account')) 
+const route = useRoute();
+
+// 当前登录用户
+const account = ref(localStorage.getItem('account')
+  ? JSON.parse(localStorage.getItem('account'))
   : {});
-const userId = account.value?.id || 0;
+const userId = Number(account.value?.id) || 0;
 
-// 聊天相关状态
 let socket = null;
 const socketUrl = `ws://localhost:8080/chatServer/${userId}`;
 
-// 好友列表
 const friendList = ref([]);
-// 当前选中聊天的好友ID & 好友信息
 const currentFriendId = ref(null);
 const currentFriend = ref(null);
-// 聊天消息列表
 const messages = ref([]);
-// 输入框内容
 const text = ref('');
 
-// 页面挂载：加载好友列表
+// ========== 关键：一进来就强制设置 currentFriendId，不再依赖好友列表 ==========
 onMounted(async () => {
   if (!userId) {
     ElMessage.warning("请先登录");
     return;
   }
+
+  // 1. 直接从路由拿 id，转数字，强制赋值
+  const targetIdStr = route.query.id;
+  if (targetIdStr) {
+    const targetId = Number(targetIdStr);
+    if (!isNaN(targetId)) {
+      currentFriendId.value = targetId; // 直接赋值！
+      console.log("✅ 从路由设置聊天对象ID：", targetId);
+    }
+  }
+
+  // 2. 加载好友列表（正常展示用）
   await getFriendList();
+
+  // 3. 如果有路由id，尝试获取用户信息（显示昵称头像）
+  if (currentFriendId.value) {
+    await getSingleUser(currentFriendId.value);
+  }
+
+  // 4. 初始化 WebSocket
   initWebSocket();
 });
 
-// ========== 1. 初始化 WebSocket ==========
+// 监听路由变化
+watch(
+  () => route.query.id,
+  async (newId) => {
+    if (!newId) {
+      currentFriendId.value = null;
+      currentFriend.value = null;
+      messages.value = [];
+      return;
+    }
+    const fid = Number(newId);
+    if (!isNaN(fid)) {
+      currentFriendId.value = fid; // 直接赋值
+      await getSingleUser(fid);
+    }
+  }
+);
+
+// 根据ID获取单个用户
+const getSingleUser = async (fid) => {
+  try {
+    const res = await axios.get(`/chat/user/${fid}`);
+    if (res.data.code === 200) {
+      currentFriend.value = res.data.data;
+      // 加载历史记录
+      const msgRes = await axios.get("/chat/message", {
+        params: {
+          fromUserId: userId,
+          toUserId: fid
+        }
+      });
+      if (msgRes.data.code === 200) {
+        messages.value = msgRes.data.data;
+        await nextTick();
+        scrollToBottom();
+      }
+    }
+  } catch (err) {
+    console.error("获取用户信息失败：", err);
+  }
+};
+
+// 初始化 WebSocket
 const initWebSocket = () => {
+  if (socket && socket.readyState === WebSocket.OPEN) return;
+
   socket = new WebSocket(socketUrl);
 
-  // 连接成功
   socket.onopen = () => {
-    console.log("WebSocket 连接成功");
+    console.log("✅ WebSocket 连接成功");
   };
 
-  // 连接错误
   socket.onerror = (err) => {
-    console.error("WebSocket 连接异常", err);
-    ElMessage.error("聊天服务连接失败");
+    console.error("❌ WebSocket 错误：", err);
+    ElMessage.error("聊天服务连接失败，请刷新页面重试");
   };
 
-  // 接收服务端推送的消息
   socket.onmessage = async (event) => {
+    console.log("📥 收到后端消息：", event.data);
     const res = JSON.parse(event.data);
     messages.value.push(res);
-    // 滚动到底部
     await nextTick();
     scrollToBottom();
-
-    // 收到消息自动标记为已读（当前聊天窗口）
-    if (currentFriendId.value === res.fromUserId) {
-      await readMessage(res.fromUserId);
-      // 刷新好友未读数量
-      getFriendList();
-    }
   };
 
-  // 连接关闭
   socket.onclose = () => {
-    console.log("WebSocket 连接关闭");
+    console.log("🔌 WebSocket 连接已关闭");
+    socket = null;
   };
 };
 
-// ========== 2. 获取好友列表（调用后端 /chat/user 接口） ==========
+// 获取好友列表
 const getFriendList = async () => {
   try {
     const res = await axios.get("/chat/user");
@@ -78,22 +129,21 @@ const getFriendList = async () => {
       friendList.value = res.data.data;
     }
   } catch (err) {
-    console.error("获取好友列表失败", err);
+    console.error("获取好友列表失败：", err);
   }
 };
 
-// ========== 3. 选中好友，加载历史聊天记录 ==========
+// 选中好友
 const selectFriend = async (friend) => {
-  currentFriendId.value = friend.id;
+  currentFriendId.value = Number(friend.id);
   currentFriend.value = friend;
   text.value = '';
 
-  // 加载两人历史消息 /chat/message
   try {
     const res = await axios.get("/chat/message", {
       params: {
         fromUserId: userId,
-        toUserId: friend.id
+        toUserId: currentFriendId.value
       }
     });
     if (res.data.code === 200) {
@@ -102,60 +152,40 @@ const selectFriend = async (friend) => {
       scrollToBottom();
     }
   } catch (err) {
-    console.error("加载聊天记录失败", err);
-  }
-
-  // 标记对方发来的消息为已读 /chat/clear
-  await readMessage(friend.id);
-  // 刷新未读消息数
-  getFriendList();
-};
-
-// ========== 4. 标记消息为已读 ==========
-const readMessage = async (toUserId) => {
-  try {
-    await axios.get("/chat/clear", {
-      params: {
-        fromUserId: userId,
-        toUserId: toUserId
-      }
-    });
-  } catch (err) {
-    console.error("标记已读失败", err);
+    console.error("加载聊天记录失败：", err);
   }
 };
 
-// ========== 5. 发送消息 ==========
+// 发送消息（只改判断：只要 currentFriendId 有值就可以发）
 const send = () => {
-  if (!text.value.trim()) {
+  const content = text.value.trim();
+  if (!content) {
     ElMessage.warning("请输入消息内容");
     return;
   }
-  if (!currentFriendId.value) {
-    ElMessage.warning("请先选择聊天好友");
+  // 关键：只要 currentFriendId 有数字就允许发送
+  if (!currentFriendId.value || isNaN(currentFriendId.value)) {
+    ElMessage.warning("请先选择聊天对象");
     return;
   }
-  if (socket.readyState !== WebSocket.OPEN) {
-    ElMessage.error("聊天连接异常，请刷新重试");
+  if (!socket || socket.readyState !== WebSocket.OPEN) {
+    ElMessage.error("聊天连接断开，请刷新页面");
     return;
   }
 
-  // 组装消息体（和后端、websocket 约定格式）
   const sendData = {
     fromUserId: userId,
     toUserId: currentFriendId.value,
-    text: text.value.trim(),
+    text: content,
     time: new Date().getTime(),
     isRead: false
   };
 
-  // WebSocket 发送
+  console.log("📤 发送消息：", sendData);
   socket.send(JSON.stringify(sendData));
-  // 清空输入框
   text.value = '';
 };
 
-// ========== 6. 聊天区域自动滚动到底部 ==========
 const scrollToBottom = () => {
   const chatBox = document.getElementById("chat-box");
   if (chatBox) {
@@ -163,7 +193,6 @@ const scrollToBottom = () => {
   }
 };
 
-// ========== 7. 页面销毁，关闭 WebSocket ==========
 onBeforeUnmount(() => {
   if (socket) {
     socket.close();
@@ -174,12 +203,11 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="chat-container">
-    <!-- 左侧：好友列表 -->
     <div class="friend-list">
       <div class="title">聊天列表</div>
-      <div 
-        class="friend-item" 
-        v-for="item in friendList" 
+      <div
+        class="friend-item"
+        v-for="item in friendList"
         :key="item.id"
         :class="{ active: currentFriendId === item.id }"
         @click="selectFriend(item)"
@@ -194,35 +222,32 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <!-- 右侧：聊天区域 -->
     <div class="chat-main">
-      <!-- 聊天头部 -->
       <div class="chat-header" v-if="currentFriend">
-        <span>正在和 {{ currentFriend.nickname }} 聊天</span>
+        正在和 {{ currentFriend.nickname }} 聊天（ID:{{ currentFriendId }}）
+      </div>
+      <div class="chat-header empty" v-else-if="currentFriendId">
+        正在和用户 {{ currentFriendId }} 聊天（无信息）
       </div>
       <div class="chat-header empty" v-else>
-        请选择左侧好友开始聊天
+        请选择好友开始聊天
       </div>
 
-      <!-- 聊天内容区 -->
       <div id="chat-box" class="chat-content">
         <div class="msg-item" v-for="msg in messages" :key="msg.id || msg.time">
-          <!-- 自己发送的消息（居右） -->
           <div class="self-msg" v-if="msg.fromUserId === userId">
             <div class="msg-text">{{ msg.text }}</div>
           </div>
-          <!-- 对方消息（居左） -->
           <div class="other-msg" v-else>
             <div class="msg-text">{{ msg.text }}</div>
           </div>
         </div>
       </div>
 
-      <!-- 消息输入区 -->
       <div class="chat-input">
-        <el-input 
-          v-model="text" 
-          placeholder="请输入消息"
+        <el-input
+          v-model="text"
+          placeholder="输入消息，回车/点击发送"
           style="flex: 1; margin-right: 10px"
           @keyup.enter.native="send"
         />
@@ -233,6 +258,7 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+/* 样式不变，沿用之前即可 */
 .chat-container {
   display: flex;
   width: 1000px;
@@ -242,8 +268,6 @@ onBeforeUnmount(() => {
   overflow: hidden;
   margin: 20px auto;
 }
-
-/* 左侧好友列表 */
 .friend-list {
   width: 240px;
   border-right: 1px solid #e5e6eb;
@@ -295,8 +319,6 @@ onBeforeUnmount(() => {
   min-width: 18px;
   text-align: center;
 }
-
-/* 右侧聊天区域 */
 .chat-main {
   flex: 1;
   display: flex;
@@ -313,7 +335,6 @@ onBeforeUnmount(() => {
   color: #999;
   text-align: center;
 }
-
 .chat-content {
   flex: 1;
   padding: 20px;
@@ -345,7 +366,6 @@ onBeforeUnmount(() => {
   background: #f4f4f5;
   color: #333;
 }
-
 .chat-input {
   display: flex;
   align-items: center;
