@@ -16,3 +16,5 @@ app.use(ElementPlus,{locale:zhCn,size:'small'})
 import './style/index.scss'
 
 app.mount('#app')
+
+

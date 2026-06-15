@@ -77,7 +77,7 @@ public class ChatController {
         return Result.success(chatService.removeByIds(ids));
     }
 
-    @GetMapping("/message")
+    @GetMapping("/messagehistory")
     public Result messages(@RequestParam Integer fromUserId,
                         @RequestParam Integer toUserId) {
 
