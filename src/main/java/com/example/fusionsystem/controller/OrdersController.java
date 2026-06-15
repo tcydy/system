@@ -157,6 +157,14 @@ public class OrdersController {
         return Result.success();
     }
 
+    @GetMapping("/receipt/{id}")
+    public Result receipt(@PathVariable Integer id) {
+        Orders orders = ordersService.getById(id);
+        orders.setStatus("交易完成");
+        ordersService.updateById(orders);
+        return Result.success();
+    }
+
     @PostMapping("/front")
     public Result saveJudge(@RequestBody Orders orders) {
         ordersService.updateById(orders);
