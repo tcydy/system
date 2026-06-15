@@ -262,7 +262,7 @@ onMounted(async () => {
           <h2>{{ user.nickname }}</h2>
         </div>
         <div style="display: flex;align-items:center;">
-          <el-button v-if="!isSelf" type="primary" size="large">去私聊</el-button>
+          <el-button v-if="!isSelf" type="primary" size="large" @click="router.push('/front/chat?id='+user.id)">去私聊</el-button>
           <el-button v-if="isSelf" type="primary" size="large" @click="router.push('/front/person')">编辑资料</el-button>
         </div>
       </div>
