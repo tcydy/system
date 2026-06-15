@@ -29,9 +29,9 @@ const getAccount = async () => {
   }
 }
 
-// 2. 根据 自己ID + 好友ID 获取双方最后一条消息
-const getLastMsg = async (toUserId) => {
-  if (!userId.value || !toUserId) return ''
+// 2. 根据 自己ID + 好友ID 获取双方最后一条消息 & 时间
+const getLastMsgAndTime = async (toUserId) => {
+  if (!userId.value || !toUserId) return { text: '', time: '' }
   try {
     const res = await request.get('/chat/messagehistory', {
       params: {
@@ -40,18 +40,21 @@ const getLastMsg = async (toUserId) => {
       }
     })
     const list = res.data || []
-    // 取最后一条消息的文本内容
     if (list.length > 0) {
-      return list[list.length - 1].text
+      const lastItem = list[list.length - 1]
+      return {
+        text: lastItem.text,
+        time: lastItem.time
+      }
     }
-    return ''
+    return { text: '', time: '' }
   } catch (err) {
     console.error('查询聊天记录失败：', err)
-    return ''
+    return { text: '', time: '' }
   }
 }
 
-// 3. 获取好友列表，并批量查询最新消息
+// 3. 获取好友列表，并批量查询最新消息+时间
 const getFriendList = async () => {
   loading.value = true
   try {
@@ -60,11 +63,11 @@ const getFriendList = async () => {
       const list = res.data || []
       friendList.value = list
 
-      // 遍历好友，逐个查询最后一条消息
+      // 遍历好友，逐个查询最后一条消息和时间
       for (const item of friendList.value) {
-        const lastMsg = await getLastMsg(item.id)
-        // 给当前好友项挂载最新消息字段
-        item.lastMsg = lastMsg
+        const { text, time } = await getLastMsgAndTime(item.id)
+        item.lastMsg = text
+        item.lastMsgTime = time
       }
     } else {
       ElMessage.error(res.msg || '获取好友列表失败')
@@ -114,7 +117,10 @@ onMounted(async () => {
         </div>
         <!-- 昵称 + 最新消息 -->
         <div class="info">
-          <div class="name">{{ item.nickname }}</div>
+          <div class="name-row">
+            <span class="name">{{ item.nickname }}</span>
+            <span class="msg-time">{{ item.lastMsgTime || '' }}</span>
+          </div>
           <div class="last-msg">
             {{ item.lastMsg || '暂无聊天记录' }}
           </div>
@@ -183,16 +189,26 @@ onMounted(async () => {
   object-fit: cover;
 }
 
-/* 昵称 + 最新消息区域 */
+/* 昵称+消息区域 */
 .info {
   margin-left: 12px;
   flex: 1;
   overflow: hidden;
 }
+/* 昵称 + 消息时间 同行布局 */
+.name-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
 .name {
   font-size: 14px;
   color: #333;
-  margin-bottom: 4px;
+}
+.msg-time {
+  font-size: 12px;
+  color: #999;
 }
 /* 最新消息文本，超出自动省略 */
 .last-msg {
