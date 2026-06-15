@@ -251,7 +251,6 @@ const getChatHistory=async() => {
   }
 }
 </script>
-
 <template>
   <div class="chat-container">
     <!-- 左侧好友列表 -->
@@ -288,26 +287,25 @@ const getChatHistory=async() => {
 
       <!-- 聊天内容区 -->
       <div id="chat-box" class="chat-content">
-          <div class="msg-item" v-for="msg in messages" :key="msg.id || msg.time">
-            <!-- 自己发出的消息：消息气泡居右，头像在气泡右侧 -->
-            <div v-if="msg.fromUserId === userId" class="self-msg">
-              <div class="msg-text">{{ msg.text }}
-                <div class="msg-time">{{ msg.time }}</div>
-              </div>
-                <!-- 当前登录用户头像 -->
-              <img class="msg-avatar" :src="account.avatarUrl || ''" alt="我的头像" />
+        <div class="msg-item" v-for="msg in messages" :key="msg.id || msg.time">
+          <!-- 自己的消息：整体靠右 | 气泡在左，头像在右 -->
+          <div v-if="msg.fromUserId === userId" class="msg-row self-row">
+            <div class="msg-bubble self-bubble">
+              {{ msg.text }}
+              <div class="msg-time">{{ msg.time }}</div>
             </div>
-            
-            <!-- 对方消息：头像在气泡左侧 -->
-            <div v-else class="other-msg-wrap">
-              <!-- 对方用户头像 -->
-              <img class="msg-avatar" :src="currentFriend.avatarUrl || ''" alt="对方头像" />
-              <div class="msg-text">
-                {{ msg.text }}
-                <div class="msg-time">{{ msg.time }}</div>
-              </div>
+            <img class="msg-avatar" :src="account.avatarUrl || '/default-avatar.png'" alt="头像" />
+          </div>
+
+          <!-- 对方消息：整体靠左 | 头像在左，气泡在右 -->
+          <div v-else class="msg-row other-row">
+            <img class="msg-avatar" :src="currentFriend.avatarUrl || '/default-avatar.png'" alt="头像" />
+            <div class="msg-bubble">
+              {{ msg.text }}
+              <div class="msg-time">{{ msg.time }}</div>
             </div>
           </div>
+        </div>
       </div>
 
       <!-- 输入区域 -->
@@ -325,42 +323,47 @@ const getChatHistory=async() => {
 </template>
 
 <style scoped>
+/* 整体容器 */
 .chat-container {
   display: flex;
   width: 1000px;
   height: 600px;
   border: 1px solid #e5e6eb;
-  border-radius: 4px;
+  border-radius: 8px;
   overflow: hidden;
   margin: 20px auto;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.08);
+  background: #fff;
 }
 
-/* 好友列表 */
+/* 左侧好友列表 */
 .friend-list {
   width: 240px;
-  border-right: 1px solid #e5e6eb;
-  background: #f9fafb;
+  border-right: 1px solid #ebeef5;
+  background-color: #f8f9fa;
 }
 .friend-list .title {
   height: 50px;
   line-height: 50px;
   text-align: center;
   font-size: 16px;
-  font-weight: bold;
-  border-bottom: 1px solid #e5e6eb;
+  font-weight: 600;
+  border-bottom: 1px solid #ebeef5;
+  color: #333;
 }
 .friend-item {
   display: flex;
   align-items: center;
-  padding: 10px 15px;
+  padding: 12px 15px;
   cursor: pointer;
   position: relative;
+  transition: background 0.2s;
 }
 .friend-item:hover {
-  background: #ebeef5;
+  background-color: #e9edf5;
 }
 .friend-item.active {
-  background: #dce3f4;
+  background-color: #d7e3fc;
 }
 .avatar img {
   width: 40px;
@@ -374,21 +377,22 @@ const getChatHistory=async() => {
 }
 .name {
   font-size: 14px;
+  color: #333;
 }
 .unread {
   position: absolute;
   right: 15px;
-  top: 12px;
+  top: 14px;
   background: #f53f3f;
   color: #fff;
   font-size: 12px;
   padding: 2px 6px;
-  border-radius: 10px;
+  border-radius: 12px;
   min-width: 18px;
   text-align: center;
 }
 
-/* 聊天主体 */
+/* 右侧聊天主体 */
 .chat-main {
   flex: 1;
   display: flex;
@@ -398,49 +402,66 @@ const getChatHistory=async() => {
   height: 50px;
   line-height: 50px;
   padding: 0 20px;
-  border-bottom: 1px solid #e5e6eb;
+  border-bottom: 1px solid #ebeef5;
   font-size: 15px;
+  color: #333;
 }
 .chat-header.empty {
   color: #999;
   text-align: center;
 }
 
+/* 聊天内容区域 */
 .chat-content {
   flex: 1;
   padding: 20px;
   overflow-y: auto;
-  background: #fff;
+  background-color: #fafafa;
 }
-
-.chat-input {
-  display: flex;
-  align-items: center;
-  padding: 15px;
-  border-top: 1px solid #e5e6eb;
-}
-
 .msg-item {
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
-/* 自身消息容器：右对齐，头像在右侧 */
 
-.self-msg {
+/* 消息行通用样式 */
+.msg-row {
   display: flex;
   align-items: flex-end;
-  flex-direction: row-reverse; /* 颠倒顺序：头像在后，气泡在前 */
-  gap: 8px;
+  gap: 10px;
 }
-/* 对方消息容器：左对齐，头像在左侧 */
-.other-msg-wrap {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
+/* 自己消息：整体右对齐 */
+.self-row {
+  justify-content: flex-end;
 }
-.other-msg {
-  display: flex;
+/* 对方消息：整体左对齐 */
+.other-row {
+  justify-content: flex-start;
 }
-/* 头像通用样式 */
+
+/* 消息气泡通用样式 */
+.msg-bubble {
+  max-width: 60%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  word-wrap: break-word;
+  font-size: 14px;
+  line-height: 1.5;
+}
+/* 自己的气泡 */
+.self-bubble {
+  background-color: #409eff;
+  color: #ffffff;
+  border-bottom-right-radius: 4px;
+}
+/* 对方气泡 */
+.msg-bubble:not(.self-bubble) {
+  background-color: #ffffff;
+  color: #333;
+  border: 1px solid #e5e6eb;
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+/* 头像样式 */
 .msg-avatar {
   width: 36px;
   height: 36px;
@@ -448,24 +469,21 @@ const getChatHistory=async() => {
   object-fit: cover;
   flex-shrink: 0;
 }
-.msg-text {
-  max-width: 60%;
-  padding: 8px 12px;
-  border-radius: 8px;
-  word-wrap: break-word;
-}
-.self-msg .msg-text {
-  background: #409eff;
-  color: #fff;
-}
-.other-msg .msg-text {
-  background: #f4f4f5;
-  color: #333;
-}
+
+/* 消息时间 */
 .msg-time {
   font-size: 12px;
-  opacity: 0.7;
+  opacity: 0.75;
   margin-top: 4px;
   text-align: right;
+}
+
+/* 输入区域 */
+.chat-input {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  border-top: 1px solid #ebeef5;
+  background: #fff;
 }
 </style>
