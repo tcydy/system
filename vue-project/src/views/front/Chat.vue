@@ -149,14 +149,19 @@ const initWebSocket = () => {
     isWsOnline.value = false;
   };
 
+  // 【核心修复】重写消息接收逻辑，区分当前聊天对象与其他用户
   socket.onmessage = async (event) => {
     try {
       const res = JSON.parse(event.data);
-      messages.value.push(res);
-      await nextTick(scrollToBottom);
+      const sendUserId = res.fromUserId;
+      // 收到任意消息都刷新好友列表，更新未读角标
+      await getFriendList();
 
-      if (res.fromUserId === currentFriendId.value) {
-        await readMessage(res.fromUserId);
+      // 只有消息发送人是当前聊天好友，才追加到聊天记录并自动标已读
+      if (sendUserId === currentFriendId.value) {
+        messages.value.push(res);
+        await nextTick(scrollToBottom);
+        await readMessage(sendUserId);
       }
     } catch (err) {
       console.error("解析消息失败：", err);
@@ -203,7 +208,7 @@ const send = async () => {
     isRead: false
   };
 
-  // 本地即时渲染消息
+  // 本地即时渲染自己的消息（后端不会推送消息给自己，只能本地渲染）
   messages.value.push(sendData);
   text.value = "";
   nextTick(scrollToBottom);
@@ -230,7 +235,7 @@ const send = async () => {
     saveLocalOfflineMsg(localList);
   }
 
-  // 2. WS在线时额外推送消息（离线则跳过）
+  // 2. WS在线时推送消息给对方（后端只会转发给toUserId，自己收不到推送）
   if (isWsOnline.value && socket && socket.readyState === WebSocket.OPEN) {
     socket.send(JSON.stringify(sendData));
   }
