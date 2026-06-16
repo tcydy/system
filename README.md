@@ -1,10 +1,10 @@
-# 融合管理系统 (Fusion System)
+# campusSHT (Fusion System)
 
 一个基于 Spring Boot 3.5.0 + Vue 3 的现代化前后端分离管理系统。
 
 ## 📋 项目简介
 
-融合管理系统是一个功能完善的用户管理平台，提供用户注册、登录、权限管理等核心功能。系统采用前后端分离架构，后端使用 Spring Boot 构建 RESTful API，前端使用 Vue 3 + Vite 构建响应式单页应用。
+campusSHT是一个功能完善的用户管理平台，提供用户注册、登录、权限管理等核心功能。系统采用前后端分离架构，后端使用 Spring Boot 构建 RESTful API，前端使用 Vue 3 + Vite 构建响应式单页应用。
 
 ### 主要特性
 
