@@ -254,16 +254,19 @@ $front-font-color: #151111;
       align-items: center;
       margin-left: 20px;
       margin-right: 60px;
+
       .logo{
         width: 30px;
         height: 30px;
         margin-right: 20px;
         font-weight: bold;
+        
         img {
           width: 100%;
           height: 100%;
           object-fit: cover;
           filter: brightness(0.8) contrast(1.3);
+          
         }
       }
       .login-content{

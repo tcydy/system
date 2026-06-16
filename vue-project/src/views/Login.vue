@@ -91,7 +91,6 @@ const login =()=>
         <div class="brand-logo">
           <div class="logo-circle">
             <img src="../../config/Logo.svg"alt="Logo" class="logo-image" />
-            <Key class="logo-icon"/>
           </div>
           <h2 class ="brand-name">{{projectName}}</h2>
         </div>
@@ -256,7 +255,7 @@ const login =()=>
   display:flex;
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 20px.20px rgba(0,0,0,0.1);
+  box-shadow: 0 20px 20px rgba(0,0,0,0.1);
   position: relative;
   z-index: 1;
   background: rgba(255,255,255,0.9);
@@ -265,8 +264,8 @@ const login =()=>
 }
 .login-left{
   width:40%;
-  background:linear-gradient(135deg,#FFC400 0%,#f3bb01 100%);
-  color:white;
+  /* 低饱和奶黄渐变保留，轻微降低饱和度适配紫色搭配 */
+  background:linear-gradient(135deg,#fff299 0%,#ebdd77 100%);
   padding:40px;
   display: flex;
   flex-direction: column;
@@ -281,19 +280,18 @@ const login =()=>
   z-index: 1;
   
   .brand-name{
-    color: #30325B;
+    color: #4a2c70;
   }
 
   .logo-circle{
     width:50px;
     height: 50px;
     border-radius: 50%;
-    background-color: #30325B;
-    position:relative;
+    /* 替换纯黑为深紫色，黄紫主题搭配 */
+    background-color: #6b42a8;
     margin-right: 12px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 10px rgba(107, 66, 168, 0.2);
     position: relative;
-    color: #30325B;
 
     .logo-image{
       width: 40px;
@@ -308,7 +306,7 @@ const login =()=>
 
   }
 
-  brand-name{
+  .brand-name{
     font-size: 20px;
     font-weight: 600;
   }
@@ -322,31 +320,30 @@ const login =()=>
   position:relative;
   z-index: 1;
 
-
   .feature-item{
     display: flex;
     align-items:center;
     margin: 30px;
     
-
     .feature-text {
-      color: #30325B;
+      color: #4a2c70;
     }
 
     .feature-icon{
       width:48px;
       height:48px;
       border-radius: 12px;
-      background-color: #30325B;
+      /* 深色图标块统一改为深紫，消除突兀纯黑 */
+      background-color: #6b42a8;
       display: flex;
       justify-content: center;
       align-items: center;
       margin-right: 16px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-
+      box-shadow: 0 4px 10px rgba(107, 66, 168, 0.2);
 
       .el-icon{
         font-size:24px;
+        color: #fff;
       }
     }
 
@@ -368,13 +365,13 @@ const login =()=>
 
 .login-footer{
   font-size:12px;
-  opacity: 0.7;
+  opacity: 0.8;
   text-align: center;
   position:relative;
   z-index: 1;
-  color: #30325B;
+  /* 页脚文字改用柔和紫色 */
+  color: #5c388a;
 }
-
 
 .login-right{
   width: 60%;
@@ -392,24 +389,24 @@ const login =()=>
   z-index: 1;
 }
 
-
 .login-title{
   font-size: 28px;
   font-weight: 600;
-  color:#333;
+  /* 标题主色改为深紫，统一主题 */
+  color:#4a2c70;
   margin:0 0 8px 0;
 }
 
 .login-subtitle{
   font-size: 16px;
-  color:#666;
+  color:#775599;
   margin:0 0  40px 0;
 }
 
 .login-form{
   .allow-warp{
     font-size: 14px;
-    color:#666;
+    color:#775599;
   }
   .login-button{
     width: 100%;
@@ -417,15 +414,18 @@ const login =()=>
     font-size: 16px;
     font-weight: 500;
     margin-top:10px;
-    background: linear-gradient(to right, #FFC400, #ebb401);
+    /* 按钮黄色渐变保留，文字替换紫色呼应搭配 */
+    background: linear-gradient(to right, #ffe618, #e9d866);
     border:none;
+    color: #4a2c70;
 
     &:hover{
-      background: linear-gradient(to right, #FFC400, #e4af03);
+      background: linear-gradient(to right, #ffe618, #ddcc5c);
     }
 
     &:disabled{
-      background: linear-gradient(to right, #ffda5e, #f2d36e);
+      background: linear-gradient(to right, #fff2b0, #f3e699);
+      color: #8866aa;
     }
   }
 }
@@ -434,15 +434,17 @@ const login =()=>
   text-align: center;
   margin-top:20px;
   font-size: 14px;
-  color:#666;
+  color:#775599;
 }
 
 .link{
-  color: #FFC400;
+  /* 链接黄紫调和，紫色高亮 */
+  color: #6b42a8;
   text-decoration: none;
-  cusor:pointer;
+  cursor:pointer;
   &:hover{
     text-decoration: underline;
+    color: #ffe618;
   }
 }
 </style>

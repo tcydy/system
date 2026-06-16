@@ -282,11 +282,11 @@ onMounted(async () => {
     </el-card>
 
     <!-- 宝贝列表 -->
-    <div v-if="tab==='宝贝'" style="margin-top: 10px;display: grid;grid-template-columns: repeat(5,1fr);gap:10px;">
+    <div v-if="tab==='宝贝'" style="margin-top: 20px;display: grid;grid-template-columns: repeat(5,1fr);gap:10px;">
       <div style="border-radius: 10px;background-color: white;cursor: pointer;" v-for="item in goods" :key="item.id">
         <div @click="router.push('/front/goodsDetail?id=' + item.id)">
           <div class="img-wrap">
-            <img class="main-img" :src="item.img" alt="">
+            <img class="main-img" :src="item.img" alt="" style="border-radius: 10px 10px 0px 0px;">
             <div class="color-mask" v-if="item.status === '已售出'"></div>
             <img class="mask-img" src="/soldOut.png" v-if="item.status === '已售出'" alt="">
           </div>

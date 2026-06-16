@@ -260,7 +260,8 @@ const register=()=>
     &-1{
       width: 300px;
       height: 300px;
-      background: linear-gradient(45deg, rgba(255, 196, 0, 0.1) 0%, rgba(255, 196, 0, 0.05) 100%);
+      /* 同步登录页浅黄透明渐变 */
+      background: linear-gradient(45deg, rgba(255, 242, 153, 0.1) 0%, rgba(235, 221, 119, 0.05) 100%);
       top: -100px;
       left:-100px;
     }
@@ -275,7 +276,8 @@ const register=()=>
     &-3 {
       width: 150px;
       height: 150px;
-      background: linear-gradient(45deg, rgba(255, 196, 0, 0.1) 0%, rgba(255, 196, 0, 0.05) 100%);
+      /* 同步登录页浅黄透明渐变 */
+      background: linear-gradient(45deg, rgba(255, 242, 153, 0.1) 0%, rgba(235, 221, 119, 0.05) 100%);
       top: 20%;
       right: -50px;
     }
@@ -305,7 +307,8 @@ const register=()=>
 }
 .register-left{
   width:40%;
-  background:linear-gradient(135deg,#FFC400 0%,#f3bb01 100%);
+  /* 和登录页完全一致奶黄渐变 */
+  background:linear-gradient(135deg,#fff299 0%,#ebdd77 100%);
   color:#30325B;
   padding:40px;
   display: flex;
@@ -327,7 +330,7 @@ const register=()=>
     background-color: #30325B;
     position:relative;
     margin-right: 12px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 10px rgba(48, 50, 91, 0.2);
 
     .logo-image{
       width: 40px;
@@ -370,7 +373,7 @@ const register=()=>
       justify-content: center;
       align-items: center;
       margin-right: 16px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 10px rgba(48, 50, 91, 0.2);
 
       .el-icon{
         font-size:24px;
@@ -423,20 +426,20 @@ const register=()=>
 .register-title{
   font-size: 28px;
   font-weight: 600;
-  color:#333;
+  color:#30325B;
   margin:0 0 8px 0;
 }
 
 .register-subtitle{
   font-size: 16px;
-  color:#666;
+  color:#505280;
   margin:0 0  40px 0;
 }
 
 .register-form{
   .allow-warp{
     font-size: 14px;
-    color:#666;
+    color:#505280;
   }
   .register-button{
     width: 100%;
@@ -444,15 +447,18 @@ const register=()=>
     font-size: 16px;
     font-weight: 500;
     margin-top:10px;
-    background: linear-gradient(to right, #FFC400, #ebb401);
+    /* 按钮渐变同步登录页黄色 */
+    background: linear-gradient(to right, #ffe618, #e9d866);
     border:none;
+    color: #30325B;
 
     &:hover{
-      background: linear-gradient(to right, #FFC400, #e4af03);
+      background: linear-gradient(to right, #ffe618, #ddcc5c);
     }
 
     &:disabled{
-      background: linear-gradient(to right, #ffda5e, #f2d36e);
+      background: linear-gradient(to right, #fff2b0, #f3e699);
+      color: #686a9c;
     }
   }
 }
@@ -461,15 +467,17 @@ const register=()=>
   text-align: center;
   margin-top:20px;
   font-size: 14px;
-  color:#666;
+  color:#505280;
 }
 
 .link{
-  color: #FFC400;
+  color: #30325B;
   text-decoration: none;
   cursor:pointer;
   &:hover{
     text-decoration: underline;
+    /* hover黄色统一登录页亮黄 */
+    color: #ffe618;
   }
 }
 </style>
