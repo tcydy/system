@@ -258,18 +258,6 @@ onMounted(async () => {
 
   getFriendList();
 
-  // // 补发离线缓存消息
-  // const offlineList = getLocalOfflineMsg();
-  // for (const msg of offlineList) {
-  //   try {
-  //     const res = request.post("/chat", msg);
-  //     if (res.code === "200") removeLocalMsg(msg.time);
-  //   } catch (err) {
-  //     console.log("离线补发中断，下次进入重试");
-  //     break;
-  //   }
-  // }
-
   initWebSocket();
 });
 

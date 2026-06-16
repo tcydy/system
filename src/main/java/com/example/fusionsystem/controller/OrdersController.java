@@ -144,7 +144,7 @@ public class OrdersController {
         ordersService.updateById(orders);
 
         Goods goods = goodsService.getById(orders.getItemId());
-        goods.setStatus("已上架");
+        goods.setStatus("上架");
         goodsService.updateById(goods);
         return Result.success();
     }
@@ -182,6 +182,9 @@ public class OrdersController {
         LambdaQueryWrapper<Orders> queryWrapper = new LambdaQueryWrapper<>();
         // 先过滤条件，再排序
         queryWrapper.eq(Orders::getItemId, id);
+        //不等于 交易关闭
+        queryWrapper.ne(Orders::getStatus, "交易关闭");
+        
         // 传入 queryWrapper 进行查询
         List<Orders> orders = ordersService.list(queryWrapper);
         return Result.success(orders);

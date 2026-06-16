@@ -106,7 +106,7 @@ onMounted(() => {
     <div class="main-container">
       <div class="left-content">
         <!-- 地址卡片 -->
-        <el-card class="card">
+        <el-card class="card" v-if="goods.shipment!=='无需发货'">
           <div class="addr-head">
             <h3>收货地址</h3>
             <span class="manage-addr" @click="router.push('/front/address')">管理地址</span>
