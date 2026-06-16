@@ -260,14 +260,14 @@ const register=()=>
     &-1{
       width: 300px;
       height: 300px;
-      background: linear-gradient(45deg, rgba(64, 132, 217, 0.1) 0%, rgba(64, 132, 217, 0.05) 100%);
+      background: linear-gradient(45deg, rgba(255, 196, 0, 0.1) 0%, rgba(255, 196, 0, 0.05) 100%);
       top: -100px;
       left:-100px;
     }
     &-2 {
       width: 200px;
       height: 200px;
-      background: linear-gradient(45deg, rgba(126, 87, 194, 0.1) 0%, rgba(126, 87, 194, 0.05) 100%);
+      background: linear-gradient(45deg, rgba(48, 50, 91, 0.1) 0%, rgba(48, 50, 91, 0.05) 100%);
       bottom: -50px;
       right: 10%;
     }
@@ -275,7 +275,7 @@ const register=()=>
     &-3 {
       width: 150px;
       height: 150px;
-      background: linear-gradient(45deg, rgba(66, 165, 245, 0.1) 0%, rgba(66, 165, 245, 0.05) 100%);
+      background: linear-gradient(45deg, rgba(255, 196, 0, 0.1) 0%, rgba(255, 196, 0, 0.05) 100%);
       top: 20%;
       right: -50px;
     }
@@ -283,7 +283,7 @@ const register=()=>
     &-4 {
       width: 250px;
       height: 250px;
-      background: linear-gradient(45deg, rgba(239, 83, 80, 0.08) 0%, rgba(239, 83, 80, 0.04) 100%);
+      background: linear-gradient(45deg, rgba(48, 50, 91, 0.08) 0%, rgba(48, 50, 91, 0.04) 100%);
       bottom: 10%;
       left: 10%;
     }
@@ -296,7 +296,7 @@ const register=()=>
   display:flex;
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 20px.20px rgba(0,0,0,0.1);
+  box-shadow: 0 20px 20px rgba(0,0,0,0.1);
   position: relative;
   z-index: 1;
   background: rgba(255,255,255,0.9);
@@ -305,8 +305,8 @@ const register=()=>
 }
 .register-left{
   width:40%;
-  background:linear-gradient(135deg,#4084d9 0%,#1a4f94 100%);
-  color:white;
+  background:linear-gradient(135deg,#FFC400 0%,#f3bb01 100%);
+  color:#30325B;
   padding:40px;
   display: flex;
   flex-direction: column;
@@ -324,11 +324,10 @@ const register=()=>
     width:50px;
     height: 50px;
     border-radius: 50%;
-    background-color: white;
+    background-color: #30325B;
     position:relative;
     margin-right: 12px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    position: relative;
 
     .logo-image{
       width: 40px;
@@ -338,13 +337,14 @@ const register=()=>
       top:50%;
       left:50%;
       transform: translate(-50%,-50%);
+      color: #fff;
     }
-
   }
 
-  brand-name{
+  .brand-name{
     font-size: 20px;
     font-weight: 600;
+    color: #30325B;
   }
 }
 
@@ -356,7 +356,6 @@ const register=()=>
   position:relative;
   z-index: 1;
 
-
   .feature-item{
     display: flex;
     align-items:center;
@@ -366,20 +365,21 @@ const register=()=>
       width:48px;
       height:48px;
       border-radius: 12px;
-      background-color: rgba(255,255,255,0.2);
+      background-color: #30325B;
       display: flex;
       justify-content: center;
       align-items: center;
       margin-right: 16px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 
-
       .el-icon{
         font-size:24px;
+        color: #fff;
       }
     }
 
     .feature-text{
+      color: #30325B;
       h3{
         font-size:16px;
         margin:0 0 5px 0;
@@ -401,8 +401,8 @@ const register=()=>
   text-align: center;
   position:relative;
   z-index: 1;
+  color: #30325B;
 }
-
 
 .register-right{
   width: 60%;
@@ -419,7 +419,6 @@ const register=()=>
   position: relative;
   z-index: 1;
 }
-
 
 .register-title{
   font-size: 28px;
@@ -445,15 +444,15 @@ const register=()=>
     font-size: 16px;
     font-weight: 500;
     margin-top:10px;
-    background: linear-gradient(to right, #4084d9, #1a4f94);
+    background: linear-gradient(to right, #FFC400, #ebb401);
     border:none;
 
     &:hover{
-      background: linear-gradient(to right, #3a76c4, #164785);
+      background: linear-gradient(to right, #FFC400, #e4af03);
     }
 
     &:disabled{
-      background: linear-gradient(to right, #a0c3f0, #8eadd3);
+      background: linear-gradient(to right, #ffda5e, #f2d36e);
     }
   }
 }
@@ -466,9 +465,9 @@ const register=()=>
 }
 
 .link{
-  color: #4084d9;
+  color: #FFC400;
   text-decoration: none;
-  cusor:pointer;
+  cursor:pointer;
   &:hover{
     text-decoration: underline;
   }

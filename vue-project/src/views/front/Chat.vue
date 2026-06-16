@@ -59,17 +59,15 @@ const getAccount = () => {
     console.log('获取当前登录用户信息res.code:',res.code)
     console.log('获取当前登录用户信息res.data:', res.data)
 
-    Object.assign(my, res.data);
-    userId.value = my.id;
-    console.log('获取当前登录用户信息userId.value:', userId.value)
-    return true;
-
-    // if (res.code === "200" && res.data) {
-      
-    // } else {
-    //   ElMessage.error(res.msg || "获取个人信息失败");
-    //   return false;
-    // }
+    if (res.code === "200" && res.data) {
+      Object.assign(my, res.data);
+      userId.value = my.id;
+      console.log('获取当前登录用户信息userId.value:', userId.value)
+      return true;
+    } else {
+      ElMessage.error(res.msg || "获取个人信息失败");
+      return false;
+    }
   } catch (err) {
     console.error("获取用户信息异常：", err);
     ElMessage.error("网络异常，获取个人信息失败");

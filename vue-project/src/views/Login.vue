@@ -265,7 +265,7 @@ const login =()=>
 }
 .login-left{
   width:40%;
-  background:linear-gradient(135deg,#4084d9 0%,#1a4f94 100%);
+  background:linear-gradient(135deg,#FFC400 0%,#f3bb01 100%);
   color:white;
   padding:40px;
   display: flex;
@@ -279,16 +279,21 @@ const login =()=>
   margin-bottom: 60px;
   position:relative;
   z-index: 1;
+  
+  .brand-name{
+    color: #30325B;
+  }
 
   .logo-circle{
     width:50px;
     height: 50px;
     border-radius: 50%;
-    background-color: white;
+    background-color: #30325B;
     position:relative;
     margin-right: 12px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     position: relative;
+    color: #30325B;
 
     .logo-image{
       width: 40px;
@@ -298,6 +303,7 @@ const login =()=>
       top:50%;
       left:50%;
       transform: translate(-50%,-50%);
+      color: white
     }
 
   }
@@ -321,12 +327,17 @@ const login =()=>
     display: flex;
     align-items:center;
     margin: 30px;
+    
+
+    .feature-text {
+      color: #30325B;
+    }
 
     .feature-icon{
       width:48px;
       height:48px;
       border-radius: 12px;
-      background-color: rgba(255,255,255,0.2);
+      background-color: #30325B;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -361,6 +372,7 @@ const login =()=>
   text-align: center;
   position:relative;
   z-index: 1;
+  color: #30325B;
 }
 
 
@@ -405,15 +417,15 @@ const login =()=>
     font-size: 16px;
     font-weight: 500;
     margin-top:10px;
-    background: linear-gradient(to right, #4084d9, #1a4f94);
+    background: linear-gradient(to right, #FFC400, #ebb401);
     border:none;
 
     &:hover{
-      background: linear-gradient(to right, #3a76c4, #164785);
+      background: linear-gradient(to right, #FFC400, #e4af03);
     }
 
     &:disabled{
-      background: linear-gradient(to right, #a0c3f0, #8eadd3);
+      background: linear-gradient(to right, #ffda5e, #f2d36e);
     }
   }
 }
@@ -426,7 +438,7 @@ const login =()=>
 }
 
 .link{
-  color: #4084d9;
+  color: #FFC400;
   text-decoration: none;
   cusor:pointer;
   &:hover{
