@@ -52,9 +52,9 @@ const removeLocalMsg = (time) => {
 };
 
 // 获取当前登录用户信息
-const getAccount = () => {
+const getAccount = async () => {
   try {
-    const res = request.get("/web/userInfo");
+    const res =await request.get("/web/userInfo");
     console.log('获取当前登录用户信息res:',res)
     console.log('获取当前登录用户信息res.code:',res.code)
     console.log('获取当前登录用户信息res.data:', res.data)
@@ -86,9 +86,9 @@ const getFriendList = async () => {
 };
 
 // 标记消息已读
-const readMessage = (toUserId) => {
+const readMessage = async (toUserId) => {
   if (!userId.value || !toUserId) return;
-  request.get("/chat/clear", {
+  await request.get("/chat/clear", {
     params: {
       fromUserId: userId.value,
       toUserId: toUserId
@@ -97,10 +97,10 @@ const readMessage = (toUserId) => {
 };
 
 // 加载好友信息 + 历史聊天记录
-const loadFriendAndHistory = (fid) => {
+const loadFriendAndHistory =async (fid) => {
   if (!fid) return;
   try {
-    const userRes = request.get(`/chat/user/${fid}`);
+    const userRes =await  request.get(`/chat/user/${fid}`);
     currentFriend.value = userRes.data || {};
     currentFriendId.value = Number(fid);
     getChatHistory();
@@ -112,10 +112,10 @@ const loadFriendAndHistory = (fid) => {
 };
 
 // 获取聊天历史记录
-const getChatHistory =  () => {
+const getChatHistory =async  () => {
   if (!userId.value || !currentFriendId.value) return;
   try {
-    const res = request.get("/chat/messagehistory", {
+    const res =await request.get("/chat/messagehistory", {
       params: {
         fromUserId: userId.value,
         toUserId: currentFriendId.value
@@ -195,7 +195,7 @@ const selectFriend = async (friend) => {
 };
 
 // 发送消息核心：优先走WebSocket实时通道，再异步入库
-const send = () => {
+const send  = async () => {
   const content = text.value.trim();
   if (!content) return ElMessage.warning("请输入消息内容");
   if (!currentFriendId.value) return ElMessage.warning("请选择聊天对象");
@@ -217,7 +217,7 @@ const send = () => {
 
   // 2. 同步调用后端保存消息
   try {
-    const res = request.post("/chat", sendData);
+    const res =await request.post("/chat", sendData);
     if (res.code === "200") {
       removeLocalMsg(sendData.time);
       // 入库成功再渲染自己消息，持久化不丢失
@@ -243,7 +243,7 @@ const send = () => {
 
 // 页面挂载
 onMounted(async () => {
-  const hasUser = getAccount();
+  const hasUser =await getAccount();
   if (!hasUser) return;
   socketUrl = `ws://localhost:8080/chatServer/${my.id}`;
 
