@@ -474,6 +474,7 @@ onMounted(async () => {
         <el-radio-group v-model="form.shipment">
           <el-radio value="包邮">包邮</el-radio>
           <el-radio value="不包邮">不包邮</el-radio>
+          <el-radio value="无需发货">无需发货</el-radio>
         </el-radio-group>
       </el-form-item>
 

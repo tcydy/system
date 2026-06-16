@@ -1,7 +1,7 @@
 <script setup>
 import {useRoute,useRouter} from "vue-router";
 import request from "@/utils/request.js"
-import {ref,onMounted} from 'vue'
+import {ref,onMounted,reactive} from 'vue'
 import {Star,StarFilled} from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus'
 import 'element-plus/dist/index.css'
@@ -17,6 +17,19 @@ const imgList = ref([])
 
 const user = ref({})
 const goods = ref({})
+
+const form=reactive({})
+const getAccount=()=>{
+  request.get('/web/userInfo').then(res=>{
+    if(res.code==='200'&&res.data){
+      Object.assign(form,res.data)
+    }else{
+      ElMessage.error(res.msg)
+    }
+  })
+}
+getAccount()
+
 const loadGoods = ()=>{
     request.get('/goods/'+id.value).then(res=>{
         goods.value=res.data
@@ -154,22 +167,24 @@ onMounted(() => {
 
             <el-divider></el-divider>
 
-            <div class="buttons" style="display:flex;gap: 10px;">
-
+            <div>
                 <div v-if="goods.status==='已售出'" style="font-weight: bolder;font-size:large;color:#ff4500;" >
                     卖掉了
                 </div>
-                <button v-if="goods.status==='上架'" @click="goToChat(user.id)">
-                    聊一聊
-                </button>
-                <button @click="toConfirm" v-if="goods.status==='上架'" >
-                    立即购买
-                </button>
-                <button style="" @click="collect" v-if="goods.status==='上架'">
-                    <el-icon v-if="goods.isCollected"><StarFilled/></el-icon>
-                    <el-icon v-else><Star/></el-icon>
-                    {{ goods.isCollected ?'已收藏':'收藏' }}
-                </button>
+                <div v-if="form.id!==goods.userId" class="buttons" style="display:flex;gap: 10px;">
+                    <button v-if="goods.status==='上架'" @click="goToChat(user.id)">
+                        聊一聊
+                    </button>
+                    <button @click="toConfirm" v-if="goods.status==='上架'" >
+                        立即购买
+                    </button>
+                    <button style="" @click="collect" v-if="goods.status==='上架'">
+                        <el-icon v-if="goods.isCollected"><StarFilled/></el-icon>
+                        <el-icon v-else><Star/></el-icon>
+                        {{ goods.isCollected ?'已收藏':'收藏' }}
+                    </button>
+                </div>
+                
 
             </div>
 

@@ -52,17 +52,24 @@ const removeLocalMsg = (time) => {
 };
 
 // 获取当前登录用户信息
-const getAccount = async () => {
+const getAccount = () => {
   try {
-    const res = await request.get("/web/userInfo");
-    if (res.code === "200" && res.data) {
-      Object.assign(my, res.data);
-      userId.value = my.id;
-      return true;
-    } else {
-      ElMessage.error(res.msg || "获取个人信息失败");
-      return false;
-    }
+    const res = request.get("/web/userInfo");
+    console.log('获取当前登录用户信息res:',res)
+    console.log('获取当前登录用户信息res.code:',res.code)
+    console.log('获取当前登录用户信息res.data:', res.data)
+
+    Object.assign(my, res.data);
+    userId.value = my.id;
+    console.log('获取当前登录用户信息userId.value:', userId.value)
+    return true;
+
+    // if (res.code === "200" && res.data) {
+      
+    // } else {
+    //   ElMessage.error(res.msg || "获取个人信息失败");
+    //   return false;
+    // }
   } catch (err) {
     console.error("获取用户信息异常：", err);
     ElMessage.error("网络异常，获取个人信息失败");
@@ -92,13 +99,13 @@ const readMessage = (toUserId) => {
 };
 
 // 加载好友信息 + 历史聊天记录
-const loadFriendAndHistory = async (fid) => {
+const loadFriendAndHistory = (fid) => {
   if (!fid) return;
   try {
-    const userRes = await request.get(`/chat/user/${fid}`);
+    const userRes = request.get(`/chat/user/${fid}`);
     currentFriend.value = userRes.data || {};
     currentFriendId.value = Number(fid);
-    await getChatHistory();
+    getChatHistory();
     readMessage(fid);
   } catch (err) {
     console.error("加载聊天数据失败：", err);
@@ -107,10 +114,10 @@ const loadFriendAndHistory = async (fid) => {
 };
 
 // 获取聊天历史记录
-const getChatHistory = async () => {
+const getChatHistory =  () => {
   if (!userId.value || !currentFriendId.value) return;
   try {
-    const res = await request.get("/chat/messagehistory", {
+    const res = request.get("/chat/messagehistory", {
       params: {
         fromUserId: userId.value,
         toUserId: currentFriendId.value
@@ -147,11 +154,13 @@ const initWebSocket = () => {
 
   socket.onerror = (err) => {
     console.error("❌ WebSocket 异常：", err);
+    ElMessage.error("聊天服务连接失败，请刷新页面");
     isWsOnline.value = false;
   };
 
-  socket.onmessage = (event) => {
+  socket.onmessage = async (event) => {
     try {
+      console.log("📥 收到服务端消息：", event.data);
       const msg = JSON.parse(event.data);
       const senderId = msg.fromUserId;
       // 仅当前聊天好友消息渲染到聊天框
@@ -160,6 +169,7 @@ const initWebSocket = () => {
         const hasSameMsg = messages.value.some(item => item.time === msg.time);
         if (!hasSameMsg) {
           messages.value.push(msg);
+          await nextTick();
           scrollToBottom();
           readMessage(senderId);
         }
@@ -187,7 +197,7 @@ const selectFriend = async (friend) => {
 };
 
 // 发送消息核心：优先走WebSocket实时通道，再异步入库
-const send = async () => {
+const send = () => {
   const content = text.value.trim();
   if (!content) return ElMessage.warning("请输入消息内容");
   if (!currentFriendId.value) return ElMessage.warning("请选择聊天对象");
@@ -202,14 +212,14 @@ const send = async () => {
   };
   text.value = "";
 
-  // 1. WS在线：优先发送WebSocket，实时推送给对方（解决实时延迟核心）
+  // 1. WS在线：优先发送WebSocket，实时推送给对方
   if (isWsOnline.value && socket.readyState === WebSocket.OPEN) {
     socket.send(JSON.stringify(sendData));
   }
 
-  // 2. 同步调用后端保存消息（方案B：双逻辑同时保留）
+  // 2. 同步调用后端保存消息
   try {
-    const res = await request.post("/chat", sendData);
+    const res = request.post("/chat", sendData);
     if (res.code === "200") {
       removeLocalMsg(sendData.time);
       // 入库成功再渲染自己消息，持久化不丢失
@@ -235,42 +245,43 @@ const send = async () => {
 
 // 页面挂载
 onMounted(async () => {
-  const hasUser = await getAccount();
+  const hasUser = getAccount();
   if (!hasUser) return;
-
-  // 动态拼接ws地址
-  const { protocol, host } = window.location;
-  const wsProtocol = protocol === "https:" ? "wss:" : "ws:";
-  socketUrl = `${wsProtocol}//${host}/chatServer/${my.id}`;
-
-  initWebSocket();
-  getFriendList();
+  socketUrl = `ws://localhost:8080/chatServer/${my.id}`;
 
   // 路由参数自动打开聊天
   const targetIdStr = route.query.id;
   if (targetIdStr) {
     const targetId = Number(targetIdStr);
-    if (!isNaN(targetId)) await loadFriendAndHistory(targetId);
-  }
-
-  // 补发离线缓存消息
-  const offlineList = getLocalOfflineMsg();
-  for (const msg of offlineList) {
-    try {
-      const res = await request.post("/chat", msg);
-      if (res.code === "200") removeLocalMsg(msg.time);
-    } catch (err) {
-      console.log("离线补发中断，下次进入重试");
-      break;
+    if (!isNaN(targetId)) {
+      loadFriendAndHistory(targetId);
     }
   }
+
+  getFriendList();
+
+  // // 补发离线缓存消息
+  // const offlineList = getLocalOfflineMsg();
+  // for (const msg of offlineList) {
+  //   try {
+  //     const res = request.post("/chat", msg);
+  //     if (res.code === "200") removeLocalMsg(msg.time);
+  //   } catch (err) {
+  //     console.log("离线补发中断，下次进入重试");
+  //     break;
+  //   }
+  // }
+
+  initWebSocket();
 });
 
 // 页面销毁关闭ws
 onBeforeUnmount(() => {
   isManualClose = true;
-  if (socket) socket.close();
-  socket = null;
+  if (socket) {
+    socket.close();
+    socket = null;
+  }
 });
 </script>
 

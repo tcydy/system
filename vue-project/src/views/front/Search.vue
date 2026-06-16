@@ -127,7 +127,7 @@ onMounted(() => {
           <div style="padding: 10px;width: 100%;min-height: 100px">
             <div style="display: flex;gap:5px;overflow: hidden">
               <div style="width: 40px;text-decoration: underline;text-decoration-color: #ffe618;text-decoration-thickness: 8px;text-underline-offset: -4px;">
-                <span style="font-weight: bolder;white-space:nowrap;font-size: 16px">包邮</span>
+                <span style="font-weight: bolder;white-space:nowrap;font-size: 16px">{{ item.shipment }}</span>
               </div>
               <div style="line-height: 1.4;overflow: hidden;overflow: hidden;text-overflow: ellipsis;white-space: nowrap">
                 <span style="font-size: 16px;font-weight: bolder">{{item.name}}</span>
