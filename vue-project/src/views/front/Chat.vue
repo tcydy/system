@@ -245,7 +245,8 @@ const send  = async () => {
 onMounted(async () => {
   const hasUser =await getAccount();
   if (!hasUser) return;
-  socketUrl = `ws://localhost:8080/chatServer/${my.id}`;
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  socketUrl = `${protocol}//${window.location.host}/chatServer/${my.id}`;
 
   // 路由参数自动打开聊天
   const targetIdStr = route.query.id;

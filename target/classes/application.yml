@@ -1,6 +1,5 @@
 server:
   port: 8080
-  ip: 127.0.0.1
 
 spring:
   datasource:
@@ -13,6 +12,11 @@ mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# 自定义上传目录
+upload:
+  path: /home/vesper/files
+  prefix: http://192.168.56.101:8080/ # url访问前缀
 
 
 

@@ -2,6 +2,7 @@
 const projectName = 'CampusSHT'
 const ip = '127.0.0.1'
 const port = '8080'
-const serverHost = 'http://' + ip + ':' + port
+// const serverHost = 'http://' + ip + ':' + port
+const serverHost = ''
 
 export { projectName, serverHost }

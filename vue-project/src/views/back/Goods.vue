@@ -371,7 +371,7 @@ onMounted(() => {
           </template>
         </el-table-column>
 
-        <el-table-column prop="place" label="所在地"/>、
+        <el-table-column prop="place" label="所在地"/>
 
         <el-table-column label="发货设置">
           <template #default="scope">
@@ -391,7 +391,7 @@ onMounted(() => {
           </template>
         </el-table-column>
 
-        <el-table-column prop="date" label="发布日期"/>、
+        <el-table-column prop="date" label="发布日期"/>
 
         <el-table-column label="操作" width="120" align="center" fixed="right">
           <template #default="scope">

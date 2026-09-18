@@ -27,12 +27,11 @@ import java.net.URLEncoder;
 @RequestMapping("/web")
 public class WebController {
 
-    private static final String FILE_UPLOAD_PATH=System.getProperty("user.dir")+ File.separator+"files";
+    @Value("${upload.prefix}")
+    private String uploadPrefix;
 
-    @Value("${server.ip:127.0.0.1}")
-    String ip;
-    @Value("${server.port:8080}")
-    String port;
+    private static final String FILE_UPLOAD_PATH="/home/vesper/files";
+
 
     @Resource
     private  IUserService userService;
@@ -129,7 +128,7 @@ public class WebController {
         //文件保存到磁盘
         file.transferTo(uploadFile);
         //拼接文件地址
-        String url="http://"+ip+":"+port+"/files/"+fileUUID;
+        String url= uploadPrefix+"files/" + fileUUID;
         //返回文件地址
         return url;
     }
