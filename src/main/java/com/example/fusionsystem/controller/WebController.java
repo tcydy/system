@@ -30,7 +30,9 @@ public class WebController {
     @Value("${upload.prefix}")
     private String uploadPrefix;
 
-    private static final String FILE_UPLOAD_PATH="/home/vesper/files";
+    ///home/vesper/files
+    @Value("${upload.path}")
+    private String uploadPath;
 
 
     @Resource
@@ -119,7 +121,7 @@ public class WebController {
 
         //定义一个文件唯一的标识码
         String fileUUID= IdUtil.fastSimpleUUID()+StrUtil.DOT+type;
-        File uploadFile = new File(FILE_UPLOAD_PATH+File.separator+fileUUID);
+        File uploadFile = new File(uploadPath+File.separator+fileUUID);
         //判断配置的文件目录是否存在。若不在则创建一个新的文件目录
         File parentFile=uploadFile.getParentFile();
         if(!parentFile.exists()){
@@ -139,7 +141,7 @@ public class WebController {
     @GetMapping("/download/{fileUUID}")
     public void download(@PathVariable String fileUUID, HttpServletResponse response)throws IOException {
         //根据文件的唯一标识码获取文件
-        File uploadFile = new File(FILE_UPLOAD_PATH + fileUUID);
+        File uploadFile = new File(uploadPath + fileUUID);
         //设置输出流的格式
         ServletOutputStream os=response.getOutputStream();
         response.addHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(fileUUID, "UTF-8"));
